@@ -1,0 +1,228 @@
+import React, { useState } from 'react';
+import { UserProfile } from '../services/api';
+import { ArrowLeft, CheckCircle2, ShieldCheck, Lock, Send, FileText, UserCheck, Clock } from 'lucide-react';
+
+interface LetterDetailViewProps {
+  user: UserProfile;
+  letterId: string;
+  onBack: () => void;
+}
+
+export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letterId, onBack }) => {
+  const [showDispositionModal, setShowDispositionModal] = useState(false);
+  const [targetUser, setTargetUser] = useState('44444444-4444-4444-4444-444444444444');
+  const [instruction, setInstruction] = useState('Tolong kaji spesifikasi teknis perangkat jaringan ini dan siapkan tanggapan sebelum hari Jumat.');
+  const [urgency, setUrgency] = useState('SEGERA');
+  const [disposed, setDisposed] = useState(false);
+
+  const mockDetail = {
+    id: letterId,
+    number: "ND/001/UK-SEC-001/VII/2026",
+    subject: "Permohonan Pengadaan Perangkat Keamanan Jaringan & Firewall Enterprise",
+    category: "NOTA_DINAS",
+    classification: "RAHASIA",
+    senderUnit: "Bagian Persuratan & Tata Usaha (UK-SEC-001)",
+    recipientUnit: "Direktorat Keamanan Informasi (UK-ITSEC-001)",
+    ccUnit: "Kantor Pusat / Sekretariat Utama (UK-ROOT)",
+    content: "Diberitahukan kepada Direktur IT & Security bahwa sehubungan dengan peningkatan ancaman serangan cyber, kami mengajukan permohonan pencairan anggaran sebesar Rp 500.000.000 untuk lisensi firewall proyek rahasia ALPHA.",
+    contentHash: "8f4e3c2b1a9f0d8e7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d",
+    signerName: "Dr. Budi Santoso, M.Si. (Kepala Unit Kerja)",
+    signedAt: "2026-07-20 14:30:12 UTC",
+    signatureAlgorithm: "Ed25519 (Asymmetric EdDSA)",
+    timestampToken: "TSA_TIMESTAMP_TOKEN|8f4e3c2b...|2026-07-20T14:30:12Z"
+  };
+
+  const handleDisposeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setDisposed(true);
+    setShowDispositionModal(false);
+    alert("Disposisi Surat Dinas Berhasil Dikirim & Catatan Audit Chains Ter-update!");
+  };
+
+  return (
+    <div style={{ maxWidth: '1100px', margin: '2rem auto', padding: '0 1.5rem' }}>
+      
+      {/* Top Action Bar */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+        <button className="btn-secondary" onClick={onBack} style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem' }}>
+          <ArrowLeft size={16} /> Kembali ke Dashboard
+        </button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button className="btn-primary" onClick={() => setShowDispositionModal(true)}>
+            <Send size={16} /> Disposisikan Surat Ini
+          </button>
+        </div>
+      </div>
+
+      {/* Main Document Card */}
+      <div className="glass-card" style={{ padding: '2.5rem', marginBottom: '2rem' }}>
+        
+        {/* Verification Banner */}
+        <div style={{
+          background: 'rgba(16, 185, 129, 0.12)',
+          border: '1px solid rgba(16, 185, 129, 0.3)',
+          borderRadius: '12px',
+          padding: '1rem 1.25rem',
+          display: 'flex',
+          justify: 'space-between',
+          alignItems: 'center',
+          marginBottom: '2rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <ShieldCheck size={28} color="var(--accent-emerald)" />
+            <div>
+              <div style={{ fontWeight: 700, color: '#34d399', fontSize: '0.95rem' }}>
+                Tanda Tangan Digital Terverifikasi SAH ({mockDetail.signatureAlgorithm})
+              </div>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                Ditandatangani oleh: {mockDetail.signerName} pada {mockDetail.signedAt}
+              </div>
+            </div>
+          </div>
+          <span className="badge badge-secret">
+            <Lock size={12} /> {mockDetail.classification}
+          </span>
+        </div>
+
+        {/* Letter Metadata Header */}
+        <div style={{ borderBottom: '2px dashed var(--border-glass)', paddingBottom: '1.5rem', marginBottom: '1.75rem' }}>
+          <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--accent-cyan)', marginBottom: '0.25rem' }}>
+            {mockDetail.number}
+          </div>
+          <h1 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>{mockDetail.subject}</h1>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '0.85rem' }}>
+            <div>
+              <span style={{ color: 'var(--text-muted)' }}>Pengirim:</span>
+              <div style={{ fontWeight: 600, marginTop: '0.15rem' }}>{mockDetail.senderUnit}</div>
+            </div>
+            <div>
+              <span style={{ color: 'var(--text-muted)' }}>Penerima Utama:</span>
+              <div style={{ fontWeight: 600, marginTop: '0.15rem' }}>{mockDetail.recipientUnit}</div>
+            </div>
+            <div>
+              <span style={{ color: 'var(--text-muted)' }}>Tembusan (CC):</span>
+              <div style={{ fontWeight: 500, marginTop: '0.15rem', color: 'var(--text-muted)' }}>{mockDetail.ccUnit}</div>
+            </div>
+            <div>
+              <span style={{ color: 'var(--text-muted)' }}>Jenis Naskah:</span>
+              <div style={{ fontWeight: 500, marginTop: '0.15rem' }}>{mockDetail.category}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Document Content Body */}
+        <div style={{ fontSize: '0.95rem', lineHeight: 1.7, marginBottom: '2rem', padding: '1rem 0' }}>
+          <p>{mockDetail.content}</p>
+        </div>
+
+        {/* Cryptographic Proof Footer */}
+        <div style={{
+          background: 'rgba(0,0,0,0.3)',
+          padding: '1rem',
+          borderRadius: '10px',
+          border: '1px solid var(--border-glass)',
+          fontSize: '0.78rem',
+          fontFamily: 'monospace'
+        }}>
+          <div style={{ color: 'var(--accent-cyan)', fontWeight: 600, marginBottom: '0.35rem' }}>
+            [CRYPTOGRAPHIC INTEGRITY PROOF & TIMESTAMP]
+          </div>
+          <div>SHA-256 Checksum: {mockDetail.contentHash}</div>
+          <div style={{ marginTop: '0.2rem', color: 'var(--text-muted)' }}>TSA Token: {mockDetail.timestampToken}</div>
+        </div>
+
+      </div>
+
+      {/* Disposed Status Banner */}
+      {disposed && (
+        <div className="glass-card" style={{ padding: '1.25rem', borderColor: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
+          <UserCheck size={24} color="var(--accent-emerald)" />
+          <div>
+            <div style={{ fontWeight: 700, color: 'var(--accent-emerald)', fontSize: '0.9rem' }}>
+              Surat Berhasil Didisposisikan
+            </div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+              Instruksi disposisi telah dikirimkan ke Staf Pelaksana (Ahmad Hidayat) dengan urgensi {urgency}.
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Disposisi Pimpinan */}
+      {showDispositionModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.75)',
+          backdropFilter: 'blur(8px)',
+          zIndex: 200,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1.5rem'
+        }}>
+          <div className="glass-card glass-card-glow" style={{ width: '100%', maxWidth: '520px', padding: '2rem' }}>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Send size={18} color="var(--accent-cyan)" /> Disposisi Surat Dinas
+              </h3>
+              <button onClick={() => setShowDispositionModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
+            </div>
+
+            <form onSubmit={handleDisposeSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+                  Target Staf / Pejabat Penerima Disposisi
+                </label>
+                <select className="input-control" value={targetUser} onChange={(e) => setTargetUser(e.target.value)}>
+                  <option value="44444444-4444-4444-4444-444444444444">Ahmad Hidayat (Staf Pelaksana Persuratan)</option>
+                  <option value="33333333-3333-3333-3333-333333333333">Siti Rahma, S.AP. (Sekretaris Unit)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+                  Tingkat Urgensi Disposisi
+                </label>
+                <select className="input-control" value={urgency} onChange={(e) => setUrgency(e.target.value)}>
+                  <option value="BIASA">BIASA</option>
+                  <option value="SEGERA">SEGERA</option>
+                  <option value="AMAT_SEGERA">AMAT SEGERA</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+                  Petunjuk / Instruksi Disposisi
+                </label>
+                <textarea
+                  className="input-control"
+                  rows={4}
+                  value={instruction}
+                  onChange={(e) => setInstruction(e.target.value)}
+                  placeholder="Tuliskan petunjuk penanganan surat..."
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                <button type="button" className="btn-secondary" onClick={() => setShowDispositionModal(false)}>
+                  Batal
+                </button>
+                <button type="submit" className="btn-primary">
+                  Kirim Disposisi Sekarang <Send size={16} />
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+};

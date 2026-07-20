@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: secureoffice-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${DB_NAME:-secureoffice_db}
+      POSTGRES_USER: ${DB_USER:-secureoffice_app}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-SecureOfficePass2026!}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-secureoffice_app} -d ${DB_NAME:-secureoffice_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: secureoffice-redis
+    restart: always
+    command: redis-server --save 60 1 --loglevel notice
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: secureoffice-minio
+    restart: always
+    entrypoint: sh
+    command: -c 'minio server /data --console-address ":9001"'
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin_minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-MinioSecurePass2026!}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:v1.9.0
+    container_name: secureoffice-qdrant
+    restart: always
+    ports:
+      - "${QDRANT_PORT:-6333}:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+  qdrant_data:
+    driver: local

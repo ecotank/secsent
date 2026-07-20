@@ -1,0 +1,69 @@
+# Environment & Secret files
+.env
+.env.local
+.env.*.local
+*.env
+
+# Cryptographic Keys & Certificates
+*.pem
+*.key
+*.crt
+*.pfx
+*.p12
+/certs/
+/keys/
+
+# Database & Storage Data Directories
+/data/
+postgres_data/
+minio_data/
+redis_data/
+qdrant_data/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node.js & Frontend dependencies/builds
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+/frontend/dist/
+/frontend/build/
+.next/
+out/
+
+# Go binaries & vendor
+/backend/bin/
+/backend/vendor/
+*.exe
+*.exe?
+*.dll
+*.so
+*.dylib
+
+# Python / AI Service virtual environments & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+.mypy_cache/
+
+# Rust / Crypto Service target directory
+/crypto-service/target/
+
+# IDE & Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
