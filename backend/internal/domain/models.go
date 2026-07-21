@@ -93,6 +93,7 @@ type User struct {
 	Role           UserRole       `json:"role" db:"role"`
 	ClearanceLevel ClearanceLevel `json:"clearance_level" db:"clearance_level"`
 	MFASecret      *string        `json:"-" db:"mfa_secret"`
+	SecurityPINHash *string       `json:"-" db:"security_pin_hash"`
 	IsActive       bool           `json:"is_active" db:"is_active"`
 	CreatedAt      time.Time      `json:"created_at" db:"created_at"`
 

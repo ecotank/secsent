@@ -99,6 +99,7 @@ CREATE TABLE users (
     role user_role_type NOT NULL,
     clearance_level clearance_level_type NOT NULL DEFAULT 'UNCLASSIFIED',
     mfa_secret VARCHAR(255),
+    security_pin_hash VARCHAR(255),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );

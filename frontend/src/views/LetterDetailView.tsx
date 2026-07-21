@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserProfile } from '../services/api';
-import { validateSecurityPIN } from '../utils/webcrypto';
-import { ArrowLeft, ShieldCheck, Lock, Send, UserCheck, ShieldAlert, Key, Eye, EyeOff } from 'lucide-react';
+import { validateSecurityPIN, generateDynamicTOTP, getTOTPTimeRemaining } from '../utils/webcrypto';
+import { ArrowLeft, ShieldCheck, Lock, Send, UserCheck, ShieldAlert, Key, EyeOff, Smartphone, Clock } from 'lucide-react';
 
 interface LetterDetailViewProps {
   user: UserProfile;
@@ -16,10 +16,21 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
   const [urgency, setUrgency] = useState('SEGERA');
   const [disposed, setDisposed] = useState(false);
 
-  // Zero-Trust PIN Re-Authentication State
+  // Zero-Trust PIN & Dynamic TOTP Re-Authentication State
   const [isSecretUnlocked, setIsSecretUnlocked] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
+  const [totpCode, setTotpCode] = useState(generateDynamicTOTP());
+  const [totpCountdown, setTotpCountdown] = useState(getTOTPTimeRemaining());
+
+  // Dynamic TOTP Countdown Timer Effect (RFC 6238 30-sec Refresh)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTotpCountdown(getTOTPTimeRemaining());
+      setTotpCode(generateDynamicTOTP());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const mockDetail = {
     id: letterId || "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
@@ -40,11 +51,11 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
 
   const handlePINVerification = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateSecurityPIN(pinInput)) {
+    if (validateSecurityPIN(pinInput, user.username)) {
       setIsSecretUnlocked(true);
       setPinError('');
     } else {
-      setPinError('PIN Keamanan 6-Digit Salah. Masukkan PIN yang benar (Demo: 123456).');
+      setPinError(`PIN / Kode TOTP Salah. Masukkan PIN Keamanan Anda atau Kode TOTP (${totpCode}).`);
     }
   };
 
@@ -153,7 +164,7 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
           </div>
         </div>
 
-        {/* Document Content Section with Zero-Trust PIN Lock */}
+        {/* Document Content Section with Zero-Trust PIN & Dynamic TOTP Lock */}
         {mockDetail.classification === 'RAHASIA' && !isSecretUnlocked ? (
           <div style={{
             background: 'rgba(0,0,0,0.4)',
@@ -178,9 +189,28 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
             <h3 style={{ fontSize: '1.25rem', marginBottom: '0.35rem', color: '#f87171' }}>
               Dokumen Terkunci Zero-Trust (Klasifikasi RAHASIA)
             </h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-              Untuk memverifikasi kewenangan dan mencegah penyadapan layar fisik, masukkan PIN 6-Digit Pejabat.
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+              Masukkan PIN Keamanan Mandiri Anda atau Kode 6-Digit Authenticator App.
             </p>
+
+            {/* Live Dynamic TOTP Indicator Pill */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              background: 'rgba(0, 242, 254, 0.1)',
+              border: '1px solid rgba(0, 242, 254, 0.3)',
+              padding: '0.4rem 0.85rem',
+              borderRadius: '8px',
+              fontSize: '0.78rem',
+              color: 'var(--accent-cyan)',
+              marginBottom: '1.25rem'
+            }}>
+              <Smartphone size={14} /> Kode TOTP Live Authenticator: <strong>{totpCode}</strong>
+              <span style={{ color: 'var(--accent-amber)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                <Clock size={12} /> ({totpCountdown}s)
+              </span>
+            </div>
 
             {pinError && (
               <div style={{
@@ -198,11 +228,11 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
               </div>
             )}
 
-            <form onSubmit={handlePINVerification} style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', maxWidth: '320px', margin: '0 auto' }}>
+            <form onSubmit={handlePINVerification} style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', maxWidth: '340px', margin: '0 auto' }}>
               <input
                 type="password"
                 className="input-control"
-                placeholder="PIN (Demo: 123456)"
+                placeholder="PIN / Kode TOTP"
                 value={pinInput}
                 onChange={(e) => setPinInput(e.target.value)}
                 maxLength={6}
