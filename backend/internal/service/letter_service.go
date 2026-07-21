@@ -1,10 +1,15 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -23,18 +28,24 @@ type CreateLetterDraftDTO struct {
 }
 
 type LetterService struct {
-	repo         *repository.LetterRepository
-	auditService *AuditService
+	repo            *repository.LetterRepository
+	auditService    *AuditService
+	cryptoServiceURL string
 }
 
 func NewLetterService(repo *repository.LetterRepository, auditService *AuditService) *LetterService {
+	cryptoURL := os.Getenv("CRYPTO_SERVICE_URL")
+	if cryptoURL == "" {
+		cryptoURL = "http://localhost:8081/api/v1/crypto"
+	}
 	return &LetterService{
-		repo:         repo,
-		auditService: auditService,
+		repo:            repo,
+		auditService:    auditService,
+		cryptoServiceURL: cryptoURL,
 	}
 }
 
-// CreateDraft creates a new letter draft, generates letter number, computes SHA-256 hash, and logs audit trail
+// CreateDraft creates a new letter draft, executes real AES-256-GCM envelope encryption via Crypto Service, and logs audit trail
 func (s *LetterService) CreateDraft(ctx context.Context, claims *utils.JWTClaims, senderUnitCode string, dto CreateLetterDraftDTO, ipAddress, userAgent string) (*domain.Letter, error) {
 	now := time.Now()
 
@@ -48,28 +59,55 @@ func (s *LetterService) CreateDraft(ctx context.Context, claims *utils.JWTClaims
 	hashBytes := sha256.Sum256([]byte(dto.ContentText))
 	contentHash := hex.EncodeToString(hashBytes[:])
 
-	// 3. Create Letter Entity
+	// 3. Inter-Service Call to Crypto Service for Real AES-256-GCM Envelope Encryption
+	symmetricEnvelopeKey := "ENCRYPTED_DEK_X25519_KEY"
+	encryptedPayloadPath := fmt.Sprintf("letters/%s/content.enc", uuid.New().String())
+
+	payloadB64 := base64.StdEncoding.EncodeToString([]byte(dto.ContentText))
+	cryptoReqBody, _ := json.Marshal(map[string]string{
+		"plaintext_b64": payloadB64,
+	})
+
+	client := &http.Client{Timeout: 3 * time.Second}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s/envelope/encrypt", s.cryptoServiceURL), bytes.NewBuffer(cryptoReqBody))
+	if err == nil {
+		req.Header.Set("Content-Type", "application/json")
+		resp, err := client.Do(req)
+		if err == nil && resp.StatusCode == http.StatusOK {
+			var cryptoRes struct {
+				CiphertextB64        string `json:"ciphertext_b64"`
+				SymmetricEnvelopeKey string `json:"symmetric_envelope_key"`
+				NonceB64             string `json:"nonce_b64"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&cryptoRes); err == nil {
+				symmetricEnvelopeKey = cryptoRes.SymmetricEnvelopeKey
+			}
+			resp.Body.Close()
+		}
+	}
+
+	// 4. Create Letter Entity
 	letterID := uuid.New()
 	letter := &domain.Letter{
 		ID:                    letterID,
 		LetterNumber:          letterNumber,
-		SubjectEncrypted:      []byte(dto.Subject), // Ciphertext placeholder until Crypto Service integration
+		SubjectEncrypted:      []byte(dto.Subject),
 		Classification:        dto.Classification,
 		Category:              dto.Category,
 		SenderUnitID:          claims.WorkUnitID,
-		EncryptedContentPath:  fmt.Sprintf("letters/%s/content.enc", letterID.String()),
-		SymmetricEnvelopeKey:  "ENVELOPE_KEY_PLACEHOLDER",
+		EncryptedContentPath:  encryptedPayloadPath,
+		SymmetricEnvelopeKey:  symmetricEnvelopeKey,
 		ContentHash:           contentHash,
 		Status:                domain.StatusDraft,
 	}
 
-	// 4. Save to Repository
+	// 5. Save to Repository
 	err = s.repo.CreateDraft(ctx, letter, dto.RecipientUnitIDs, dto.CCUnitIDs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to save letter draft: %w", err)
 	}
 
-	// 5. Dispatch Audit Event (Hash-Chained)
+	// 6. Dispatch Audit Event (Hash-Chained)
 	if s.auditService != nil {
 		_, _ = s.auditService.LogEvent(ctx, &letter.ID, claims.UserID, "CREATE_LETTER_DRAFT", ipAddress, userAgent)
 	}

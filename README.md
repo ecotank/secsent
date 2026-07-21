@@ -34,7 +34,7 @@ SecureOffice-AI adalah aplikasi web persuratan dinas digital terstruktur antar-u
 
 ---
 
-## 🚀 Fitur Unggulan Sistem
+## 🚀 Fitur Unggulan Sistem (Production-Grade)
 
 ### 1. Core Correspondence System (Prioritas 1)
 - **Letter Numbering Engine**: Pembuat nomor surat resmi otomatis berurutan per unit dan tahun: `{KodeJenis}/{Sequence:03d}/{KodeUnit}/{BulanRomawi}/{Tahun}` (misal: `ND/001/UK-SEC-001/VII/2026`).
@@ -46,6 +46,7 @@ SecureOffice-AI adalah aplikasi web persuratan dinas digital terstruktur antar-u
 - **Digital Signature Engine**: Tanda tangan digital resmi pejabat menggunakan **Ed25519 (EdDSA)** dengan timestamp token & pembuktian integritas.
 - **Tamper-Evident Audit Trail**: Log aktivitas terantai SHA-256 ($\text{CurrentHash} = \text{SHA-256}(\text{Action} \parallel \text{Actor} \parallel \text{Timestamp} \parallel \text{PrevHash})$).
 - **RBAC & ABAC Access Control**: Pengaturan hak akses berdasarkan Role (`ADMIN`, `HEAD_OF_UNIT`, `SECRETARY`, `STAFF`, `AUDITOR`) dan Clearance Level (`UNCLASSIFIED`, `RESTRICTED`, `CONFIDENTIAL`, `SECRET`).
+- **Zero-Trust Screen Protection**: **Auto Inactivity 3-Minute Idle Lock**, **Zero-Trust 6-Digit PIN Re-Authentication Modal**, dan **Dynamic Translucent Security Watermarking**.
 
 ### 3. Multi-Agentic AI Subsystem (Prioritas 3)
 - **Agent 1: ML Document Classifier**: Categorization instan jenis naskah & urgensi.
@@ -57,44 +58,55 @@ SecureOffice-AI adalah aplikasi web persuratan dinas digital terstruktur antar-u
 
 ---
 
-## 🛠️ Panduan Memulai & Pengoperasian (Quick Start)
+## 📖 Production Deployment & Operational Security Guide
 
-### 1. Prasyarat Sistem
-- **Docker & Docker Compose**
-- **Go 1.22+**
-- **Python 3.10+**
-- **Node.js 18+**
-
-### 2. Mengaktifkan Infrastruktur Basis Data
-```bash
-# Jalankan PostgreSQL 16, Redis, MinIO S3, dan Qdrant
-docker-compose up -d
+### 1. Konfigurasi Rahasia Environment Production (`.env`)
+Salin `.env.example` ke `.env` pada server produksi dan atur nilai rahasia produksi:
+```env
+APP_ENV=production
+APP_PORT=8080
+JWT_SECRET=GANTI_DENGAN_RANDOM_SECRET_MINIMAL_64_KARAKTER_PRODUKSI
+DATABASE_URL=postgres://secureoffice_user:PasswordKuatProduksi@localhost:5432/secureoffice_db?sslmode=verify-full
+CRYPTO_SERVICE_URL=http://localhost:8081/api/v1/crypto
+AI_SERVICE_URL=http://localhost:8000/api/v1/ai
 ```
 
-### 3. Jalankan Backend Core Service (:8080)
+### 2. Eksekusi DDL Migration Basis Data PostgreSQL
 ```bash
-cd backend
-go run cmd/api/main.go
+# Eksekusi migrasi DDL 10 tabel & ENUM types
+psql -U secureoffice_user -d secureoffice_db -f database/migrations/000001_init_schema.up.sql
+
+# Masukkan data awal unit kerja & akun administrator instansi
+psql -U secureoffice_user -d secureoffice_db -f database/seeds/000001_seed_initial_data.sql
 ```
 
-### 4. Jalankan Crypto Service (:8081)
+### 3. Menjalankan Docker Compose Production Cluster
 ```bash
-cd crypto-service
-go run cmd/api/main.go
+docker-compose -f docker-compose.yml up -d --build
 ```
 
-### 5. Jalankan AI Subsystem Service (:8000)
-```bash
-cd ai-service
-pip install -r requirements.txt
-python -m uvicorn app.main:app --reload --port 8000
-```
+### 4. Konfigurasi HTTPS / TLS Termination Reverse Proxy (Nginx)
+Atur Nginx sebagai Reverse Proxy dengan sertifikat TLS kedinasan:
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name persuratan.instansi.go.id;
 
-### 6. Jalankan Frontend Client SPA (:5173)
-```bash
-cd frontend
-npm install
-npm run dev
+    ssl_certificate /etc/ssl/certs/persuratan.crt;
+    ssl_certificate_key /etc/ssl/private/persuratan.key;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+
+    location / {
+        proxy_pass http://localhost:5173;
+    }
+
+    location /api/v1/ {
+        proxy_pass http://localhost:8080/api/v1/;
+    }
+}
 ```
 
 ---

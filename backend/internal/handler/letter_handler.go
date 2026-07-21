@@ -36,7 +36,10 @@ func (h *LetterHandler) CreateDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	senderUnitCode := "UK-SEC-001" // Default unit code fallback
+	senderUnitCode := claims.WorkUnitID.String()
+	if claims.WorkUnitID == uuid.Nil {
+		senderUnitCode = "UK-SEC-001"
+	}
 	letter, err := h.service.CreateDraft(r.Context(), claims, senderUnitCode, dto, r.RemoteAddr, r.UserAgent())
 	if err != nil {
 		respondJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
