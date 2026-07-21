@@ -18,11 +18,18 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     setLoading(true);
     setError('');
 
+    // Strict Frontend Pre-Check
+    if (!mfaCode || mfaCode.trim().length !== 6) {
+      setError('Kode Verifikasi MFA/TOTP (6-Digit) wajib diisi dan harus berupa 6 angka.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      const res = await loginUser(username, password);
+      const res = await loginUser(username, password, mfaCode);
       onLoginSuccess(res.token, res.user);
     } catch (err: any) {
-      setError('Autentikasi gagal. Periksa kembali username atau frasa sandi.');
+      setError(err.message || 'Autentikasi gagal. Periksa kembali username, password, dan Kode MFA/TOTP 6-digit.');
     } finally {
       setLoading(false);
     }
@@ -115,7 +122,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
 
           <div>
             <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.35rem', fontWeight: 500 }}>
-              Kode Verifikasi MFA / TOTP Authenticator (6-Digit)
+              Kode Verifikasi MFA / TOTP Authenticator (Wajib 6-Digit)
             </label>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               <input
@@ -123,18 +130,19 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 className="input-control"
                 value={mfaCode}
                 onChange={(e) => setMfaCode(e.target.value)}
-                placeholder="6-Digit TOTP"
+                placeholder="Masukkan 6-Digit TOTP"
                 maxLength={6}
                 style={{ letterSpacing: '4px', textAlign: 'center', fontWeight: 700 }}
+                required
               />
               <span style={{ fontSize: '0.75rem', color: 'var(--accent-emerald)', whiteSpace: 'nowrap' }}>
-                <Lock size={12} inline /> Encrypted
+                <Lock size={12} inline /> Enforced
               </span>
             </div>
           </div>
 
           <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '0.5rem' }} disabled={loading}>
-            {loading ? 'Memverifikasi Datastore...' : (
+            {loading ? 'Memverifikasi Datastore & MFA...' : (
               <>
                 Masuk ke Sistem Persuratan <ArrowRight size={18} />
               </>

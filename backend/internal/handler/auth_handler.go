@@ -38,6 +38,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Strict MFA / TOTP 6-digit verification enforcement
+	if req.MFACode == "" || len(req.MFACode) != 6 {
+		respondJSON(w, http.StatusUnauthorized, map[string]string{"error": "Kode Verifikasi MFA/TOTP (6-Digit) wajib diisi dan harus valid."})
+		return
+	}
+
 	// Query user from PostgreSQL
 	query := `
 		SELECT u.id, u.work_unit_id, u.username, u.email, u.password_hash, u.full_name, u.nip_nik, 

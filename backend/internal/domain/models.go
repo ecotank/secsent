@@ -190,6 +190,7 @@ type AuditLog struct {
 type LoginRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
+	MFACode  string `json:"mfa_code" binding:"required"`
 }
 
 type LoginResponse struct {
