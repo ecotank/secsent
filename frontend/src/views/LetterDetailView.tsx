@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../services/api';
-import { ArrowLeft, CheckCircle2, ShieldCheck, Lock, Send, FileText, UserCheck, Clock } from 'lucide-react';
+import { validateSecurityPIN } from '../utils/webcrypto';
+import { ArrowLeft, ShieldCheck, Lock, Send, UserCheck, ShieldAlert, Key, Eye, EyeOff } from 'lucide-react';
 
 interface LetterDetailViewProps {
   user: UserProfile;
@@ -15,8 +16,13 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
   const [urgency, setUrgency] = useState('SEGERA');
   const [disposed, setDisposed] = useState(false);
 
+  // Zero-Trust PIN Re-Authentication State
+  const [isSecretUnlocked, setIsSecretUnlocked] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState('');
+
   const mockDetail = {
-    id: letterId,
+    id: letterId || "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
     number: "ND/001/UK-SEC-001/VII/2026",
     subject: "Permohonan Pengadaan Perangkat Keamanan Jaringan & Firewall Enterprise",
     category: "NOTA_DINAS",
@@ -32,6 +38,16 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
     timestampToken: "TSA_TIMESTAMP_TOKEN|8f4e3c2b...|2026-07-20T14:30:12Z"
   };
 
+  const handlePINVerification = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validateSecurityPIN(pinInput)) {
+      setIsSecretUnlocked(true);
+      setPinError('');
+    } else {
+      setPinError('PIN Keamanan 6-Digit Salah. Masukkan PIN yang benar (Demo: 123456).');
+    }
+  };
+
   const handleDisposeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setDisposed(true);
@@ -39,8 +55,10 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
     alert("Disposisi Surat Dinas Berhasil Dikirim & Catatan Audit Chains Ter-update!");
   };
 
+  const timestampStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
   return (
-    <div style={{ maxWidth: '1100px', margin: '2rem auto', padding: '0 1.5rem' }}>
+    <div style={{ maxWidth: '1100px', margin: '2rem auto', padding: '0 1.5rem', position: 'relative' }}>
       
       {/* Top Action Bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
@@ -54,9 +72,33 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
         </div>
       </div>
 
-      {/* Main Document Card */}
-      <div className="glass-card" style={{ padding: '2.5rem', marginBottom: '2rem' }}>
+      {/* Main Document Card with Dynamic Watermark Container */}
+      <div className="glass-card" style={{ padding: '2.5rem', marginBottom: '2rem', position: 'relative', overflow: 'hidden' }}>
         
+        {/* Dynamic Security Screen Watermark Overlay */}
+        <div style={{
+          position: 'absolute',
+          top: 0, left: 0, right: 0, bottom: 0,
+          pointerEvents: 'none',
+          zIndex: 10,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-around',
+          alignItems: 'center',
+          opacity: 0.045,
+          userSelect: 'none',
+          transform: 'rotate(-20deg)',
+          fontSize: '1.15rem',
+          fontWeight: 800,
+          color: '#ffffff',
+          whiteSpace: 'nowrap'
+        }}>
+          <div>CONFIDENTIAL • {user.full_name} ({user.nip_nik}) • {timestampStr} UTC</div>
+          <div>INTERNAL USE ONLY • IP: 127.0.0.1 • CLEARANCE: {user.clearance_level}</div>
+          <div>CONFIDENTIAL • {user.full_name} ({user.nip_nik}) • {timestampStr} UTC</div>
+          <div>DO NOT PHOTOCOPY • SECUREOFFICE-AI AUDITED</div>
+        </div>
+
         {/* Verification Banner */}
         <div style={{
           background: 'rgba(16, 185, 129, 0.12)',
@@ -111,10 +153,83 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
           </div>
         </div>
 
-        {/* Document Content Body */}
-        <div style={{ fontSize: '0.95rem', lineHeight: 1.7, marginBottom: '2rem', padding: '1rem 0' }}>
-          <p>{mockDetail.content}</p>
-        </div>
+        {/* Document Content Section with Zero-Trust PIN Lock */}
+        {mockDetail.classification === 'RAHASIA' && !isSecretUnlocked ? (
+          <div style={{
+            background: 'rgba(0,0,0,0.4)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            borderRadius: '12px',
+            padding: '2.5rem 1.5rem',
+            textAlign: 'center',
+            marginBottom: '2rem'
+          }}>
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.15)',
+              width: '56px', height: '56px',
+              borderRadius: '14px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#f87171',
+              marginBottom: '1rem'
+            }}>
+              <Lock size={28} />
+            </div>
+            <h3 style={{ fontSize: '1.25rem', marginBottom: '0.35rem', color: '#f87171' }}>
+              Dokumen Terkunci Zero-Trust (Klasifikasi RAHASIA)
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+              Untuk memverifikasi kewenangan dan mencegah penyadapan layar fisik, masukkan PIN 6-Digit Pejabat.
+            </p>
+
+            {pinError && (
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.2)',
+                color: '#f87171',
+                padding: '0.5rem',
+                borderRadius: '8px',
+                fontSize: '0.8rem',
+                marginBottom: '1rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem'
+              }}>
+                <ShieldAlert size={14} /> {pinError}
+              </div>
+            )}
+
+            <form onSubmit={handlePINVerification} style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', maxWidth: '320px', margin: '0 auto' }}>
+              <input
+                type="password"
+                className="input-control"
+                placeholder="PIN (Demo: 123456)"
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value)}
+                maxLength={6}
+                style={{ textAlign: 'center', letterSpacing: '4px', fontSize: '1rem' }}
+                required
+              />
+              <button type="submit" className="btn-primary" style={{ padding: '0.5rem 1rem' }}>
+                Buka Surat <Key size={14} />
+              </button>
+            </form>
+          </div>
+        ) : (
+          <div style={{ fontSize: '0.95rem', lineHeight: 1.7, marginBottom: '2rem', padding: '1rem 0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--accent-emerald)', fontWeight: 600 }}>
+                ✓ Encrypted Payload Decrypted via Ephemeral Key Engine
+              </span>
+              <button
+                onClick={() => setIsSecretUnlocked(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+              >
+                <EyeOff size={12} /> Kunci Kembali Teks Surat
+              </button>
+            </div>
+            <p>{mockDetail.content}</p>
+          </div>
+        )}
 
         {/* Cryptographic Proof Footer */}
         <div style={{
