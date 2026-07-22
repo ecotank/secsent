@@ -30,6 +30,7 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
     senderUnit: "Bagian Persuratan & Tata Usaha (UK-SEC-001)",
     recipientUnit: "Direktorat Keamanan Informasi (UK-ITSEC-001)",
     ccUnit: "Kantor Pusat / Sekretariat Utama (UK-ROOT)",
+    content: "Diberitahukan kepada Direktur IT & Security bahwa sehubungan dengan peningkatan ancaman serangan cyber, kami mengajukan permohonan pencairan anggaran sebesar Rp 500.000.000 untuk lisensi firewall proyek rahasia ALPHA.",
     signerName: "Dr. Budi Santoso, M.Si. (Kepala Unit Kerja)",
     signedAt: "2026-07-20 14:30:12 UTC",
     signatureAlgorithm: "Ed25519 (Asymmetric EdDSA)",
@@ -224,59 +225,65 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
           <div style={{ fontSize: '0.95rem', lineHeight: 1.7, marginBottom: '2rem', padding: '1rem 0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--accent-emerald)', fontWeight: 600 }}>
-                ✓ Transmisi Jalur Aman Aktif (AES-256-GCM Encrypted File)
+                ✓ Transmisi Jalur Aman Terenkripsi AES-256-GCM Aktif
               </span>
               {mockDetail.classification === 'RAHASIA' && (
                 <button
                   onClick={() => setIsSecretUnlocked(false)}
                   style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
                 >
-                  <EyeOff size={12} /> Kunci Kembali Dokumen
+                  <EyeOff size={12} /> Kunci Kembali Surat
                 </button>
               )}
             </div>
 
-            {/* Main File-Based Reception Card (Tactical Look matching Forensic Vault) */}
-            <div style={{
-              background: 'rgba(216, 255, 67, 0.03)',
-              border: '1px solid var(--accent-cyan)',
-              borderRadius: '12px',
-              padding: '2rem 1.5rem',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              textAlign: 'center',
-              gap: '1rem',
-              boxShadow: '0 8px 32px rgba(216,255,67,0.08)'
-            }}>
-              <div style={{
-                backgroundColor: 'rgba(216, 255, 67, 0.1)',
-                padding: '0.75rem',
-                borderRadius: '50%',
-                color: 'var(--accent-cyan)'
-              }}>
-                <FileText size={36} />
-              </div>
-              <div>
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#ffffff' }}>
-                  {mockDetail.fileName}
-                </h3>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                  Ukuran Berkas: {(mockDetail.fileSize / 1024).toFixed(1)} KB • Ekstensi Resmi Instansi
+            {/* Render Decrypted Text Content (Opsi Teks) */}
+            {mockDetail.content && (
+              <div style={{ marginBottom: '2rem' }}>
+                <h4 style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
+                  Isi Pesan Surat Dinas:
+                </h4>
+                <p style={{ color: '#ffffff', backgroundColor: 'rgba(255,255,255,0.01)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
+                  {mockDetail.content}
                 </p>
               </div>
+            )}
 
-              <button
-                onClick={handleDownloadFile}
-                className="btn-primary"
-                style={{
-                  padding: '0.75rem 2rem', fontSize: '0.9rem',
-                  display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem'
-                }}
-              >
-                <Download size={18} /> Dekripsi & Unduh Dokumen Resmi
-              </button>
-            </div>
+            {/* Render Encrypted PDF File Attachment Card (Opsi Berkas) */}
+            {mockDetail.fileName && (
+              <div style={{
+                background: 'rgba(216, 255, 67, 0.03)',
+                border: '1px solid var(--accent-cyan)',
+                borderRadius: '12px',
+                padding: '1.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                boxShadow: '0 8px 32px rgba(216,255,67,0.08)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{
+                    backgroundColor: 'rgba(216, 255, 67, 0.1)',
+                    padding: '0.5rem',
+                    borderRadius: '8px',
+                    color: 'var(--accent-cyan)'
+                  }}>
+                    <FileText size={24} />
+                  </div>
+                  <div>
+                    <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#ffffff' }}>
+                      {mockDetail.fileName}
+                    </h4>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      Ukuran Berkas: {(mockDetail.fileSize / 1024).toFixed(1)} KB • Terenkripsi AES-256-GCM
+                    </span>
+                  </div>
+                </div>
+                <button onClick={handleDownloadFile} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
+                  <Download size={14} /> Unduh & Dekripsi File
+                </button>
+              </div>
+            )}
 
           </div>
         )}
