@@ -25,22 +25,6 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
   const [aiResult, setAiResult] = useState<AIRiskScanResponse & { compliance?: any } | null>(null);
   const [overridden, setOverridden] = useState(false);
 
-  // Auto-Extract Subject from Content (Always matches content dynamically if subject is not manually edited)
-  useEffect(() => {
-    if (isSubjectManuallyEdited) return;
-    if (mode === 'text') {
-      const trimmed = content.trim();
-      if (trimmed === '') {
-        setSubject('');
-        return;
-      }
-      const firstSentence = trimmed.split(/[.!?]/)[0].trim();
-      const wordsArray = firstSentence.split(/\s+/);
-      const words = wordsArray.slice(0, 10).join(' ');
-      setSubject(words + (wordsArray.length > 10 ? "..." : ""));
-    }
-  }, [content, mode, isSubjectManuallyEdited]);
-
   // Debounced Auto-trigger AI Security Scan (Triggers automatically 600ms after user stops typing)
   useEffect(() => {
     const hasInput = mode === 'text' 
@@ -62,6 +46,12 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
 
         const result = await analyzeLetterWithAI(textToScan, subject);
         setAiResult(result);
+
+        // Dynamically set concluded formal subject line if user has not manually typed one yet
+        if (!isSubjectManuallyEdited && result.suggested_subject) {
+          setSubject(result.suggested_subject);
+        }
+
         if (result.recommendation.recommended_classification) {
           setClassification(result.recommendation.recommended_classification as any);
         }
@@ -73,7 +63,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
     }, 600); // 600ms debounce threshold
 
     return () => clearTimeout(delayDebounceFn);
-  }, [subject, content, attachedFile, mode]);
+  }, [subject, content, attachedFile, mode, isSubjectManuallyEdited]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {

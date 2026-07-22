@@ -86,3 +86,4 @@ class FullScanResponse(BaseModel):
     risk_analysis: RiskAnalyzerResponse
     compliance: ComplianceResponse
     recommendation: RecommenderResponse
+    suggested_subject: Optional[str] = None

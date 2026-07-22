@@ -54,6 +54,28 @@ def classify_document(request: ClassifierRequest):
         raise HTTPException(status_code=500, detail=f"Classification error: {str(e)}")
 
 
+def conclude_subject_from_text(text: str) -> str:
+    text_lower = text.lower()
+    if "anggaran" in text_lower or "biaya" in text_lower or "pengadaan" in text_lower:
+        if "keamanan" in text_lower or "firewall" in text_lower or "jaringan" in text_lower:
+            return "Permohonan Pengadaan Perangkat Keamanan Jaringan & Firewall Enterprise"
+        return "Permohonan Pengadaan Sarana dan Prasarana Operasional Instansi"
+    if "password" in text_lower or "token" in text_lower or "kunci" in text_lower or "sandi" in text_lower:
+        if "himbauan" in text_lower or "edaran" in text_lower or "kepatuhan" in text_lower:
+            return "Himbauan Kepatuhan Protokol Keamanan Informasi dan Sandi"
+        return "Pengaturan Ulang Akses Kredensial Keamanan Ekosistem"
+    if "rapat" in text_lower or "undangan" in text_lower or "menghadiri" in text_lower or "pertemuan" in text_lower:
+        return "Undangan Rapat Pembahasan Agenda Koordinasi Internal Unit Kerja"
+    if "menetapkan" in text_lower or "keputusan" in text_lower or "sk" in text_lower or "memutuskan" in text_lower:
+        return "Surat Keputusan Pengangkatan Pejabat Pelaksana Kegiatan"
+    # Fallback to smart first-sentence summarization if no keyword matches
+    first_sentence = text.split(".")[0].strip()
+    words = first_sentence.split()
+    if len(words) > 8:
+        return " ".join(words[:8]) + "..."
+    return "Pemberitahuan Koordinasi Pelaksanaan Kegiatan Operasional"
+
+
 @app.post("/api/v1/ai/analyze-risk", response_model=FullScanResponse)
 def analyze_document_risk(request: FullScanRequest):
     try:
@@ -77,13 +99,17 @@ def analyze_document_risk(request: FullScanRequest):
         )
         risk_res = risk_analyzer_agent.analyze(risk_req)
 
-        # Step 4: Compliance Audit Check
+        # Conclude formal subject line dynamically
+        suggested = conclude_subject_from_text(request.raw_text_content)
+
+        # Step 4: Compliance Audit Check using the finalized subject
+        active_subject = request.subject if request.subject and request.subject != "Draft Surat Dinas" else suggested
         comp_req = ComplianceRequest(
             letter_id=request.letter_id,
             header_metadata=HeaderMetadata(
                 letter_number=request.letter_number,
                 date=request.date,
-                subject=request.subject
+                subject=active_subject
             )
         )
         comp_res = compliance_auditor_agent.audit(comp_req)
@@ -103,7 +129,8 @@ def analyze_document_risk(request: FullScanRequest):
             sanitized_text=sanitized_text,
             risk_analysis=risk_res,
             compliance=comp_res,
-            recommendation=rec_res
+            recommendation=rec_res,
+            suggested_subject=suggested
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI Multi-Agent pipeline processing error: {str(e)}")

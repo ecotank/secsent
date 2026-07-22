@@ -53,6 +53,7 @@ export interface AIRiskScanResponse {
     disposition_restriction: string;
     action_summary: string;
   };
+  suggested_subject?: string;
 }
 
 export async function loginUser(username: string, password: string, mfaCode: string): Promise<{ token: string; user: UserProfile }> {
@@ -231,29 +232,60 @@ export async function analyzeLetterWithAI(text: string, subject: string): Promis
     "api key", "credential", "exploit", "bug bounty", "rahasia negara"
   ];
 
+  // Dynamic Subject Concluding/Formulation Engine
+  let concludedSubject = "Pemberitahuan Koordinasi Pelaksanaan Kegiatan Operasional";
+  if (textLower.includes("anggaran") || textLower.includes("biaya") || textLower.includes("pengadaan")) {
+    if (textLower.includes("keamanan") || textLower.includes("firewall") || textLower.includes("jaringan")) {
+      concludedSubject = "Permohonan Pengadaan Perangkat Keamanan Jaringan & Firewall Enterprise";
+    } else {
+      concludedSubject = "Permohonan Pengadaan Sarana dan Prasarana Operasional Instansi";
+    }
+  } else if (textLower.includes("password") || textLower.includes("token") || textLower.includes("kunci") || textLower.includes("sandi")) {
+    if (textLower.includes("himbauan") || textLower.includes("edaran") || textLower.includes("kepatuhan")) {
+      concludedSubject = "Himbauan Kepatuhan Protokol Keamanan Informasi dan Sandi";
+    } else {
+      concludedSubject = "Pengaturan Ulang Akses Kredensial Keamanan Ekosistem";
+    }
+  } else if (textLower.includes("rapat") || textLower.includes("undangan") || textLower.includes("menghadiri") || textLower.includes("pertemuan")) {
+    concludedSubject = "Undangan Rapat Pembahasan Agenda Koordinasi Internal Unit Kerja";
+  } else if (textLower.includes("menetapkan") || textLower.includes("keputusan") || textLower.includes("sk") || textLower.includes("memutuskan")) {
+    concludedSubject = "Surat Keputusan Pengangkatan Pejabat Pelaksana Kegiatan";
+  } else {
+    const firstSentence = text.split(".")[0].trim();
+    const wordsArr = firstSentence.split(/\s+/);
+    if (wordsArr.length > 8) {
+      concludedSubject = wordsArr.slice(0, 8).join(" ") + "...";
+    } else if (firstSentence.length > 5) {
+      concludedSubject = firstSentence;
+    }
+  }
+
+  const activeSubject = subject && subject !== "Draft Surat Dinas" ? subject : concludedSubject;
+  const activeSubjectLower = activeSubject.toLowerCase();
+
   const complianceMissingElements: string[] = [];
   const complianceRecommendations: string[] = [];
   let complianceStatus = "COMPLIANT";
 
-  if (!subject || subject.trim() === "") {
+  if (!activeSubject || activeSubject.trim() === "") {
     complianceStatus = "NON_COMPLIANT";
     complianceMissingElements.push("SUBJECT_MISSING");
     complianceRecommendations.push("Perihal naskah dinas wajib diisi.");
   } else {
-    if (subject.trim().length < 15) {
+    if (activeSubject.trim().length < 15) {
       complianceMissingElements.push("SUBJECT_TOO_SHORT");
       complianceRecommendations.push("Perihal terlalu singkat. Harus menggambarkan maksud surat secara deskriptif (minimal 15 karakter).");
     }
-    if (subject.trim().length > 100) {
+    if (activeSubject.trim().length > 100) {
       complianceMissingElements.push("SUBJECT_TOO_LONG");
       complianceRecommendations.push("Perihal terlalu panjang (maksimal 100 karakter).");
     }
-    const hasFormal = formalPrefixes.some(pref => subjectLower.includes(pref));
+    const hasFormal = formalPrefixes.some(pref => activeSubjectLower.includes(pref));
     if (!hasFormal) {
       complianceMissingElements.push("NON_FORMAL_SUBJECT");
       complianceRecommendations.push("Gunakan kata benda formal kedinasan pada awal perihal (misal: 'Permohonan...', 'Pemberitahuan...', 'Laporan...').");
     }
-    const leakedKws = forbiddenSubjectKeywords.filter(kw => subjectLower.includes(kw));
+    const leakedKws = forbiddenSubjectKeywords.filter(kw => activeSubjectLower.includes(kw));
     if (leakedKws.length > 0) {
       complianceStatus = "NON_COMPLIANT";
       complianceMissingElements.push("SUBJECT_INFORMATION_LEAK");
@@ -291,6 +323,7 @@ export async function analyzeLetterWithAI(text: string, subject: string): Promis
       required_encryption: "HYBRID_AES_256_GCM_X25519",
       disposition_restriction: riskScore >= 7.00 ? "RESTRICT_TO_UNIT_HEAD_ONLY" : "NONE",
       action_summary: actionSummary
-    }
+    },
+    suggested_subject: concludedSubject
   };
 }
