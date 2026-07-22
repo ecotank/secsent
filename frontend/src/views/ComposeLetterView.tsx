@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, analyzeLetterWithAI, AIRiskScanResponse } from '../services/api';
-import { Sparkles, ShieldAlert, Send, ArrowLeft, AlertCircle, Upload, FileText, CheckCircle2 } from 'lucide-react';
+import { Sparkles, ShieldAlert, Send, ArrowLeft, AlertCircle, Upload, CheckCircle2 } from 'lucide-react';
 
 interface ComposeLetterViewProps {
   user: UserProfile;
@@ -11,9 +11,9 @@ interface ComposeLetterViewProps {
 export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBack, onSubmitSuccess }) => {
   const [mode, setMode] = useState<'text' | 'file'>('text'); // Dual-Mode correspondence state
   const [category, setCategory] = useState('NOTA_DINAS');
-  const [subject, setSubject] = useState('Permohonan Pengadaan Perangkat Keamanan Jaringan & Firewall Enterprise');
+  const [subject, setSubject] = useState('');
   const [classification, setClassification] = useState<'BIASA' | 'TERBATAS' | 'RAHASIA' | 'SANGAT_RAHASIA'>('BIASA');
-  const [content, setContent] = useState('Diberitahukan kepada Direktur IT & Security bahwa sehubungan dengan peningkatan ancaman serangan cyber, kami mengajukan permohonan pencairan anggaran sebesar Rp 500.000.000 untuk lisensi firewall proyek rahasia ALPHA.');
+  const [content, setContent] = useState('');
   const [recipient, setRecipient] = useState('UK-ITSEC-001');
 
   // File Upload State (For Opsi PDF)
@@ -24,34 +24,51 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
   const [aiResult, setAiResult] = useState<AIRiskScanResponse | null>(null);
   const [overridden, setOverridden] = useState(false);
 
-  // Auto-trigger AI Security Scan based on content/subject/file changes
-  const runAutoAIScan = async (currentSubject: string, currentContent: string, currentFile: File | null) => {
-    if (scanning) return;
-    setScanning(true);
-    setOverridden(false);
-    try {
-      const textToScan = mode === 'text' 
-        ? `${currentSubject}\n\n${currentContent}` 
-        : `${currentSubject}\n\n[FILE ATTACHMENT]: ${currentFile ? currentFile.name : ''}`;
-
-      const result = await analyzeLetterWithAI(textToScan, currentSubject);
-      setAiResult(result);
-      if (result.recommendation.recommended_classification) {
-        setClassification(result.recommendation.recommended_classification as any);
-      }
-    } catch (e) {
-      console.error("AI Auto Scan error:", e);
-    } finally {
-      setScanning(false);
-    }
-  };
-
-  // Trigger automatically when file changes
+  // Auto-Extract Subject from Content (First 8-12 words of content if subject is empty or default)
   useEffect(() => {
-    if (mode === 'file' && attachedFile) {
-      runAutoAIScan(subject, content, attachedFile);
+    if (mode === 'text' && content.trim() !== '') {
+      const firstSentence = content.split(/[.!?]/)[0].trim();
+      const words = firstSentence.split(/\s+/).slice(0, 10).join(' ');
+      if (words.length > 5 && (!subject || subject.length < 15)) {
+        setSubject(words + "...");
+      }
     }
-  }, [attachedFile, mode]);
+  }, [content, mode]);
+
+  // Debounced Auto-trigger AI Security Scan (Triggers automatically 600ms after user stops typing)
+  useEffect(() => {
+    // Only trigger if there is actual input to analyze
+    const hasInput = mode === 'text' 
+      ? (subject.trim() !== '' || content.trim() !== '')
+      : (subject.trim() !== '' || attachedFile !== null);
+
+    if (!hasInput) {
+      setAiResult(null);
+      return;
+    }
+
+    const delayDebounceFn = setTimeout(async () => {
+      setScanning(true);
+      setOverridden(false);
+      try {
+        const textToScan = mode === 'text' 
+          ? `Perihal: ${subject}\n\nIsi Surat: ${content}` 
+          : `Perihal: ${subject}\n\n[FILE ATTACHMENT]: ${attachedFile ? attachedFile.name : ''}`;
+
+        const result = await analyzeLetterWithAI(textToScan, subject);
+        setAiResult(result);
+        if (result.recommendation.recommended_classification) {
+          setClassification(result.recommendation.recommended_classification as any);
+        }
+      } catch (e) {
+        console.error("AI Auto Scan error:", e);
+      } finally {
+        setScanning(false);
+      }
+    }, 600); // 600ms debounce threshold
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [subject, content, attachedFile, mode]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -91,7 +108,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
         </div>
       </div>
 
-      {/* Dual-Mode Mode Switcher Tabs */}
+      {/* Dual-Mode Switcher Tabs */}
       <div style={{
         display: 'flex', gap: '0.5rem', marginBottom: '1.5rem',
         padding: '0.35rem', backgroundColor: '#091513', borderRadius: '10px',
@@ -99,7 +116,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
       }}>
         <button
           type="button"
-          onClick={() => { setMode('text'); setAiResult(null); }}
+          onClick={() => { setMode('text'); setAiResult(null); setSubject(''); setContent(''); }}
           style={{
             flex: 1, padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', cursor: 'pointer',
             fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s',
@@ -111,7 +128,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
         </button>
         <button
           type="button"
-          onClick={() => { setMode('file'); setAiResult(null); }}
+          onClick={() => { setMode('file'); setAiResult(null); setSubject(''); setAttachedFile(null); }}
           style={{
             flex: 1, padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', cursor: 'pointer',
             fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2',
@@ -155,15 +172,14 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
 
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 600 }}>
-                Perihal Surat Dinas
+                Perihal Surat Dinas {mode === 'text' && <span style={{ color: 'var(--accent-cyan)' }}>(AI Auto-Extracts if empty)</span>}
               </label>
               <input
                 type="text"
                 className="input-control"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                onBlur={() => runAutoAIScan(subject, content, attachedFile)}
-                placeholder="Masukkan perihal naskah dinas..."
+                placeholder="Perihal naskah dinas..."
                 required
               />
             </div>
@@ -207,7 +223,6 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
                   rows={8}
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  onBlur={() => runAutoAIScan(subject, content, attachedFile)}
                   placeholder="Tuliskan isi surat dinas secara lengkap di sini..."
                   required
                   style={{ resize: 'vertical' }}

@@ -50,19 +50,17 @@ export interface AIRiskScanResponse {
 }
 
 export async function loginUser(username: string, password: string, mfaCode: string): Promise<{ token: string; user: UserProfile }> {
-  // Strict MFA / TOTP 6-Digit Pre-Validation
   const cleanMFA = mfaCode ? mfaCode.trim() : "";
   if (!cleanMFA || cleanMFA.length !== 6 || !/^\d+$/.test(cleanMFA)) {
     throw new Error("Kode Verifikasi MFA/TOTP (6-Digit) Wajib Diisi & Harus Valid.");
   }
 
-  // Validate TOTP Code against WebCrypto Dynamic Engine / Stored User PIN
   if (!validateSecurityPIN(cleanMFA, username)) {
     throw new Error("Kode Verifikasi MFA/TOTP (6-Digit) tidak cocok atau telah kadaluarsa.");
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 2000); // 2-second hard timeout for fallback
+  const timeoutId = setTimeout(() => controller.abort(), 2000);
 
   try {
     const res = await fetch(`${BACKEND_URL}/auth/login`, {
@@ -89,7 +87,6 @@ export async function loginUser(username: string, password: string, mfaCode: str
     console.warn("Backend offline or DB timeout, executing fallback demo authentication.");
   }
 
-  // Determine role based on username
   let role: "ADMIN" | "HEAD_OF_UNIT" | "SECRETARY" | "STAFF" | "AUDITOR" = "HEAD_OF_UNIT";
   let fullName = "Dr. Budi Santoso, M.Si.";
   let clearance: "UNCLASSIFIED" | "RESTRICTED" | "CONFIDENTIAL" | "SECRET" = "CONFIDENTIAL";
@@ -104,7 +101,6 @@ export async function loginUser(username: string, password: string, mfaCode: str
     clearance = "SECRET";
   }
 
-  // Production Session Result after MFA Check
   return {
     token: "jwt_access_token_" + Date.now(),
     user: {
@@ -149,34 +145,95 @@ export async function analyzeLetterWithAI(text: string, subject: string): Promis
     console.warn("AI Service offline, utilizing AI fallback response engine.");
   }
 
-  // Fallback AI Response Simulation
-  const isHighRisk = text.toLowerCase().includes("rahasia") || text.toLowerCase().includes("anggaran") || text.toLowerCase().includes("alpha");
+  // --- COMPREHENSIVE LOCAL FALLBACK SCANNER ENGINE ---
+  const textLower = text.toLowerCase();
+
+  const highKeywords = [
+    { type: "INTEL_MILITARY", kw: ["intelijen", "militer", "sandi", "alutsista", "operasi keamanan", "komando", "satgas", "rahasia negara"] },
+    { type: "CYBER_VULNERABILITY", kw: ["exploit", "peretasan", "kebocoran data", "kerentanan", "serangan cyber", "hacker", "bug bounty"] },
+    { type: "SYSTEM_CREDENTIALS", kw: ["password", "private key", "token akses", "api key", "credential", "passphrase", "kunci enkripsi"] },
+    { type: "LEGAL_INVESTIGATION", kw: ["penyidikan", "tipikor", "tersangka", "kasus hukum", "bap", "korupsi", "surat perintah penyidikan"] },
+    { type: "HIGH_SECRET_LABEL", kw: ["rahasia", "secret", "top secret", "sangat rahasia", "confidential"] }
+  ];
+
+  const mediumKeywords = [
+    { type: "FINANCIAL_PROCUREMENT", kw: ["anggaran", "biaya proyek", "pencairan dana", "tender", "keuangan", "nominal", "keuntungan"] },
+    { type: "INTERNAL_POLICY", kw: ["kebijakan internal", "draf keputusan", "strategis", "himbauan keamanan", "protokol"] },
+    { type: "INFRASTRUCTURE_METADATA", kw: ["ip address", "server utama", "port jaringan", "database", "firewall"] }
+  ];
+
+  const detectedRiskEntities: Array<{ entity_type: string; phrase: string; risk_impact: string }> = [];
+  let highMatches = 0;
+  let mediumMatches = 0;
+
+  // Scan High Severity
+  for (const group of highKeywords) {
+    for (const word of group.kw) {
+      if (textLower.includes(word)) {
+        highMatches++;
+        detectedRiskEntities.push({
+          entity_type: group.type,
+          phrase: word,
+          risk_impact: `High Risk: Detected classified military, credential, vulnerability or investigation terms (${word}).`
+        });
+        break; // Count once per group
+      }
+    }
+  }
+
+  // Scan Medium Severity
+  for (const group of mediumKeywords) {
+    for (const word of group.kw) {
+      if (textLower.includes(word)) {
+        mediumMatches++;
+        detectedRiskEntities.push({
+          entity_type: group.type,
+          phrase: word,
+          risk_impact: `Medium Risk: Detected financial, internal policy or infrastructure terms (${word}).`
+        });
+        break; // Count once per group
+      }
+    }
+  }
+
+  // Calculate score locally matching backend agent math
+  let score = 1.00 + (highMatches * 2.50) + (mediumMatches * 1.20);
+  if (highMatches > 0 && score < 7.50) {
+    score = 7.50;
+  } else if (mediumMatches > 0 && score < 4.50) {
+    score = 4.50;
+  }
+  const riskScore = Math.min(score, 10.00);
+
+  const riskLevel = riskScore >= 7.00 ? "HIGH" : riskScore >= 4.00 ? "MEDIUM" : "LOW";
+  const recommendedClassification = riskScore >= 7.00 ? "RAHASIA" : riskScore >= 4.00 ? "TERBATAS" : "BIASA";
+  
+  const actionSummary = riskScore >= 7.00
+    ? `Surat direkomendasikan naik klasifikasi menjadi RAHASIA karena mendeteksi data anggaran sensitif atau kunci rahasia (Skor Risiko: ${riskScore.toFixed(2)}).`
+    : riskScore >= 4.00
+    ? `Surat direkomendasikan klasifikasi TERBATAS (Skor Risiko: ${riskScore.toFixed(2)}).`
+    : "Dokumen memenuhi kriteria standar. Rekomendasi klasifikasi BIASA.";
+
   return {
     letter_id: "draft-" + Date.now(),
     classifier: {
-      predicted_category: "NOTA_DINAS",
+      predicted_category: textLower.includes("edaran") ? "SURAT_EDARAN" : "NOTA_DINAS",
       confidence_score: 0.95,
-      predicted_urgency: "SEGERA"
+      predicted_urgency: textLower.includes("segera") ? "SEGERA" : "BIASA"
     },
-    sanitized_text: text.replace(/Rp\s?\d+/g, "Rp [REDACTED_AMOUNT]"),
+    sanitized_text: text
+      .replace(/Rp\s?\d+(\.\d{3})*/gi, "Rp [REDACTED_AMOUNT]")
+      .replace(/\b(19|20)\d{16}\b|\b\d{16}\b/g, "[REDACTED_NIK_NIP]"),
     risk_analysis: {
-      risk_score: isHighRisk ? 7.80 : 2.10,
-      risk_level: isHighRisk ? "HIGH" : "LOW",
-      detected_risk_entities: isHighRisk ? [
-        {
-          entity_type: "PROJECT_SECRET_CODE",
-          phrase: "rahasia/anggaran",
-          risk_impact: "Potential leak of sensitive operational code or budget details"
-        }
-      ] : []
+      risk_score: riskScore,
+      risk_level: riskLevel,
+      detected_risk_entities: detectedRiskEntities
     },
     recommendation: {
-      recommended_classification: isHighRisk ? "RAHASIA" : "BIASA",
+      recommended_classification: recommendedClassification,
       required_encryption: "HYBRID_AES_256_GCM_X25519",
-      disposition_restriction: isHighRisk ? "RESTRICT_TO_UNIT_HEAD_ONLY" : "NONE",
-      action_summary: isHighRisk 
-        ? "Surat direkomendasikan naik klasifikasi menjadi RAHASIA karena mendeteksi data anggaran sensitif (Skor Risiko: 7.80)."
-        : "Dokumen memenuhi kriteria standar. Rekomendasi klasifikasi BIASA."
+      disposition_restriction: riskScore >= 7.00 ? "RESTRICT_TO_UNIT_HEAD_ONLY" : "NONE",
+      action_summary: actionSummary
     }
   };
 }
