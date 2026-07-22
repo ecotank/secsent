@@ -137,29 +137,34 @@ export function App() {
   const initials = user.full_name ? user.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'PJ';
 
   return (
-    <main className="min-h-screen bg-[#07100f] text-[#e8eee8] selection:bg-[#d8ff43] selection:text-[#07100f] flex">
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#07100f', color: '#e8eee8' }}>
       
-      {/* 1. Left Sidebar (Identical to Sentinel Vault Layout) */}
-      <aside style={{ width: '254px' }} className="sticky top-0 hidden h-screen shrink-0 flex-col border-r border-white/10 bg-[#091513] px-5 py-6 lg:flex">
+      {/* 1. Left Sidebar (Fixed 254px Tactical Container) */}
+      <aside className="sidebar-container">
         
         {/* Logo Brand Header */}
-        <div className="mb-12 flex items-center gap-3 px-2">
-          <div className="grid h-10 w-10 place-items-center rounded-md bg-[#d8ff43] text-[#091513]">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '3rem', paddingLeft: '0.25rem' }}>
+          <div style={{
+            display: 'grid', placeItems: 'center', width: '40px', height: '40px',
+            borderRadius: '6px', backgroundColor: '#d8ff43', color: '#091513'
+          }}>
             <Icon name="shield" size={21}/>
           </div>
           <div>
-            <p className="text-[10px] font-semibold tracking-[0.2em] text-[#aab6aa] uppercase">SECURE</p>
-            <p className="text-sm font-bold tracking-wide uppercase">CORRESPONDENCE</p>
+            <p style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.2em', color: '#aab6aa', textTransform: 'uppercase' }}>
+              SECURE
+            </p>
+            <p style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '0.05em', color: '#ffffff' }}>
+              CORRESPONDENCE
+            </p>
           </div>
         </div>
 
         {/* Sidebar Nav Buttons */}
-        <nav className="space-y-1" aria-label="Navigasi utama">
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }} aria-label="Navigasi utama">
           <button
             onClick={() => setCurrentView('dashboard')}
-            className={`flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm font-semibold transition ${
-              currentView === 'dashboard' ? "bg-[#d8ff43] text-[#07100f]" : "text-[#9fac9f] hover:bg-white/5 hover:text-white"
-            }`}
+            className={`sidebar-nav-btn ${currentView === 'dashboard' ? 'active' : ''}`}
           >
             <Icon name="grid"/>
             <span>Dashboard</span>
@@ -167,9 +172,7 @@ export function App() {
 
           <button
             onClick={() => setCurrentView('compose')}
-            className={`flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm font-semibold transition ${
-              currentView === 'compose' ? "bg-[#d8ff43] text-[#07100f]" : "text-[#9fac9f] hover:bg-white/5 hover:text-white"
-            }`}
+            className={`sidebar-nav-btn ${currentView === 'compose' ? 'active' : ''}`}
           >
             <Icon name="plus"/>
             <span>Buat Surat Dinas</span>
@@ -177,7 +180,7 @@ export function App() {
 
           <button
             onClick={() => setShowPINModal(true)}
-            className="flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm font-semibold transition text-[#9fac9f] hover:bg-white/5 hover:text-white"
+            className="sidebar-nav-btn"
           >
             <Icon name="shield"/>
             <span>Pengaturan PIN</span>
@@ -185,7 +188,8 @@ export function App() {
 
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-md px-3 py-3 text-left text-sm font-semibold transition text-[#ff6b6b] hover:bg-white/5"
+            className="sidebar-nav-btn"
+            style={{ color: '#ff6b6b' }}
           >
             <Icon name="logout"/>
             <span>Keluar Sesi</span>
@@ -193,12 +197,15 @@ export function App() {
         </nav>
 
         {/* Bottom Protected Badge */}
-        <div className="mt-auto rounded-lg border border-white/10 bg-[#0d1c18] p-4">
-          <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-[#d8ff43]">
-            <span className="h-2 w-2 rounded-full bg-[#d8ff43] shadow-[0_0_12px_#d8ff43]"/>
+        <div style={{
+          marginTop: 'auto', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)',
+          backgroundColor: '#0d1c18', padding: '1rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '12px', fontWeight: 600, color: '#d8ff43', marginBottom: '0.5rem' }}>
+            <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#d8ff43', boxShadow: '0 0 12px #d8ff43' }}/>
             Sistem Terlindungi
           </div>
-          <p className="font-mono text-[10px] leading-5 text-[#809084]">
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', lineHeight: '1.5', color: '#809084' }}>
             AES-256 · HSM online<br/>
             SYNC {syncTime} WIB
           </p>
@@ -207,30 +214,31 @@ export function App() {
       </aside>
 
       {/* 2. Right Main Layout Area */}
-      <section className="min-w-0 flex-1">
+      <section style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         
         {/* Top Header Bar */}
-        <header className="flex h-[77px] items-center justify-between border-b border-white/10 px-5 sm:px-8 lg:px-10">
-          <div className="flex items-center gap-3 lg:hidden">
-            <div className="grid h-9 w-9 place-items-center rounded bg-[#d8ff43] text-[#07100f]">
-              <Icon name="shield"/>
-            </div>
-            <span className="text-xs font-bold tracking-wider">SECUREOFFICE</span>
-          </div>
-          <p className="hidden font-mono text-[10px] tracking-[0.12em] text-[#839187] uppercase md:block">
+        <header className="top-header">
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '0.12em', color: '#839187', textTransform: 'uppercase' }}>
             DASBOR / {currentView === 'dashboard' ? 'DASHBOARD' : currentView === 'compose' ? 'TULIS_SURAT' : 'SURAT_DETAIL'}
           </p>
-          <div className="flex items-center gap-3">
-            <button className="relative grid h-10 w-10 place-items-center rounded-md border border-white/10 text-[#aab6aa] hover:border-white/30" aria-label="Notifikasi">
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <button style={{
+              position: 'relative', display: 'grid', placeItems: 'center', width: '40px', height: '40px',
+              borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#aab6aa', cursor: 'pointer'
+            }} aria-label="Notifikasi">
               <Icon name="bell"/>
-              <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[#e9a84f]"/>
+              <span style={{ position: 'absolute', right: '8px', top: '8px', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#e9a84f' }}/>
             </button>
-            <div className="flex items-center gap-3 border-l border-white/10 pl-4">
-              <div className="text-right">
-                <p className="text-xs font-semibold">{user.full_name}</p>
-                <p className="font-mono text-[9px] text-[#819084] uppercase">{user.role}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '1rem' }}>
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: '12px', fontWeight: 600, color: '#ffffff' }}>{user.full_name}</p>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#819084', textTransform: 'uppercase' }}>{user.role}</p>
               </div>
-              <div className="grid h-9 w-9 place-items-center rounded-full bg-[#355c57] text-xs font-bold text-white">
+              <div style={{
+                display: 'grid', placeItems: 'center', width: '36px', height: '36px',
+                borderRadius: '50%', backgroundColor: '#355c57', fontSize: '12px', fontWeight: 700, color: '#ffffff'
+              }}>
                 {initials}
               </div>
             </div>
@@ -238,7 +246,7 @@ export function App() {
         </header>
 
         {/* View Router Render Block */}
-        <div style={{ minHeight: 'calc(100vh - 77px)' }}>
+        <div style={{ flex: 1, padding: '2rem' }}>
           {currentView === 'dashboard' && (
             <DashboardView
               user={user}
@@ -421,7 +429,7 @@ export function App() {
         </div>
       )}
 
-    </main>
+    </div>
   );
 }
 
