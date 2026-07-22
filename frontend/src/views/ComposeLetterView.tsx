@@ -18,14 +18,16 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
 
   // File Upload State (For Opsi PDF)
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [isSubjectManuallyEdited, setIsSubjectManuallyEdited] = useState(false);
 
   // AI Security Advisory Card State
   const [scanning, setScanning] = useState(false);
   const [aiResult, setAiResult] = useState<AIRiskScanResponse & { compliance?: any } | null>(null);
   const [overridden, setOverridden] = useState(false);
 
-  // Auto-Extract Subject from Content (First 8-12 words of content if subject is empty)
+  // Auto-Extract Subject from Content (First 8-12 words of content if subject is empty and not manually edited)
   useEffect(() => {
+    if (isSubjectManuallyEdited) return;
     if (mode === 'text' && content.trim() !== '') {
       const firstSentence = content.split(/[.!?]/)[0].trim();
       const words = firstSentence.split(/\s+/).slice(0, 10).join(' ');
@@ -33,7 +35,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
         setSubject(words + "...");
       }
     }
-  }, [content, mode]);
+  }, [content, mode, isSubjectManuallyEdited]);
 
   // Debounced Auto-trigger AI Security Scan (Triggers automatically 600ms after user stops typing)
   useEffect(() => {
@@ -115,7 +117,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
       }}>
         <button
           type="button"
-          onClick={() => { setMode('text'); setAiResult(null); setSubject(''); setContent(''); }}
+          onClick={() => { setMode('text'); setAiResult(null); setSubject(''); setContent(''); setIsSubjectManuallyEdited(false); }}
           style={{
             flex: 1, padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', cursor: 'pointer',
             fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s',
@@ -127,7 +129,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
         </button>
         <button
           type="button"
-          onClick={() => { setMode('file'); setAiResult(null); setSubject(''); setAttachedFile(null); }}
+          onClick={() => { setMode('file'); setAiResult(null); setSubject(''); setAttachedFile(null); setIsSubjectManuallyEdited(false); }}
           style={{
             flex: 1, padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', cursor: 'pointer',
             fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2',
@@ -177,7 +179,10 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
                 type="text"
                 className="input-control"
                 value={subject}
-                onChange={(e) => setSubject(e.target.value)}
+                onChange={(e) => {
+                  setSubject(e.target.value);
+                  setIsSubjectManuallyEdited(true);
+                }}
                 placeholder="Perihal naskah dinas..."
                 required
               />
