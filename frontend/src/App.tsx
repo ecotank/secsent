@@ -95,7 +95,7 @@ export function App() {
   useEffect(() => {
     if (!token || !user) return;
 
-    let idleTimer: NodeJS.Timeout;
+    let idleTimer: any;
 
     const resetIdleTimer = () => {
       clearTimeout(idleTimer);

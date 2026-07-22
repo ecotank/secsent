@@ -107,7 +107,7 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
           borderRadius: '12px',
           padding: '1rem 1.25rem',
           display: 'flex',
-          justify: 'space-between',
+          justifyContent: 'space-between',
           alignItems: 'center',
           marginBottom: '2rem'
         }}>

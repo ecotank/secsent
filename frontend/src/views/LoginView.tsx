@@ -136,7 +136,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 required
               />
               <span style={{ fontSize: '0.75rem', color: 'var(--accent-emerald)', whiteSpace: 'nowrap' }}>
-                <Lock size={12} inline /> Enforced
+                <Lock size={12} /> Enforced
               </span>
             </div>
           </div>
