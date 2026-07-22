@@ -41,6 +41,12 @@ export interface AIRiskScanResponse {
       risk_impact: string;
     }>;
   };
+  compliance?: {
+    letter_id: string;
+    compliance_status: string;
+    missing_elements: string[];
+    recommendations: string[];
+  };
   recommendation: {
     recommended_classification: string;
     required_encryption: string;
@@ -142,11 +148,11 @@ export async function analyzeLetterWithAI(text: string, subject: string): Promis
     }
   } catch (e) {
     clearTimeout(timeoutId);
-    console.warn("AI Service offline, utilizing AI fallback response engine.");
   }
 
   // --- COMPREHENSIVE LOCAL FALLBACK SCANNER ENGINE ---
   const textLower = text.toLowerCase();
+  const subjectLower = subject.toLowerCase();
 
   const highKeywords = [
     { type: "INTEL_MILITARY", kw: ["intelijen", "militer", "sandi", "alutsista", "operasi keamanan", "komando", "satgas", "rahasia negara"] },
@@ -176,7 +182,7 @@ export async function analyzeLetterWithAI(text: string, subject: string): Promis
           phrase: word,
           risk_impact: `High Risk: Detected classified military, credential, vulnerability or investigation terms (${word}).`
         });
-        break; // Count once per group
+        break;
       }
     }
   }
@@ -191,7 +197,7 @@ export async function analyzeLetterWithAI(text: string, subject: string): Promis
           phrase: word,
           risk_impact: `Medium Risk: Detected financial, internal policy or infrastructure terms (${word}).`
         });
-        break; // Count once per group
+        break;
       }
     }
   }
@@ -214,6 +220,51 @@ export async function analyzeLetterWithAI(text: string, subject: string): Promis
     ? `Surat direkomendasikan klasifikasi TERBATAS (Skor Risiko: ${riskScore.toFixed(2)}).`
     : "Dokumen memenuhi kriteria standar. Rekomendasi klasifikasi BIASA.";
 
+  // --- COMPREHENSIVE LOCAL FALLBACK COMPLIANCE INSPECTOR ---
+  const formalPrefixes = [
+    "permohonan", "himbauan", "pemberitahuan", "laporan", "keputusan",
+    "undangan", "nota", "rencana", "usulan", "persetujuan", "instruksi",
+    "evaluasi", "pelaksanaan", "pengadaan", "pengangkatan", "penunjukan"
+  ];
+  const forbiddenSubjectKeywords = [
+    "password", "private key", "token", "kunci enkripsi", "sandi negara",
+    "api key", "credential", "exploit", "bug bounty", "rahasia negara"
+  ];
+
+  const complianceMissingElements: string[] = [];
+  const complianceRecommendations: string[] = [];
+  let complianceStatus = "COMPLIANT";
+
+  if (!subject || subject.trim() === "") {
+    complianceStatus = "NON_COMPLIANT";
+    complianceMissingElements.push("SUBJECT_MISSING");
+    complianceRecommendations.push("Perihal naskah dinas wajib diisi.");
+  } else {
+    if (subject.trim().length < 15) {
+      complianceMissingElements.push("SUBJECT_TOO_SHORT");
+      complianceRecommendations.push("Perihal terlalu singkat. Harus menggambarkan maksud surat secara deskriptif (minimal 15 karakter).");
+    }
+    if (subject.trim().length > 100) {
+      complianceMissingElements.push("SUBJECT_TOO_LONG");
+      complianceRecommendations.push("Perihal terlalu panjang (maksimal 100 karakter).");
+    }
+    const hasFormal = formalPrefixes.some(pref => subjectLower.includes(pref));
+    if (!hasFormal) {
+      complianceMissingElements.push("NON_FORMAL_SUBJECT");
+      complianceRecommendations.push("Gunakan kata benda formal kedinasan pada awal perihal (misal: 'Permohonan...', 'Pemberitahuan...', 'Laporan...').");
+    }
+    const leakedKws = forbiddenSubjectKeywords.filter(kw => subjectLower.includes(kw));
+    if (leakedKws.length > 0) {
+      complianceStatus = "NON_COMPLIANT";
+      complianceMissingElements.push("SUBJECT_INFORMATION_LEAK");
+      complianceRecommendations.push(`Kritis: Perihal membocorkan info rahasia (${leakedKws.join(", ")}). Pindahkan ke isi terenkripsi.`);
+    }
+  }
+
+  if (complianceMissingElements.length > 0 && complianceStatus !== "NON_COMPLIANT") {
+    complianceStatus = complianceMissingElements.length === 1 ? "WARNING" : "NON_COMPLIANT";
+  }
+
   return {
     letter_id: "draft-" + Date.now(),
     classifier: {
@@ -228,6 +279,12 @@ export async function analyzeLetterWithAI(text: string, subject: string): Promis
       risk_score: riskScore,
       risk_level: riskLevel,
       detected_risk_entities: detectedRiskEntities
+    },
+    compliance: {
+      letter_id: "draft-" + Date.now(),
+      compliance_status: complianceStatus,
+      missing_elements: complianceMissingElements,
+      recommendations: complianceRecommendations
     },
     recommendation: {
       recommended_classification: recommendedClassification,

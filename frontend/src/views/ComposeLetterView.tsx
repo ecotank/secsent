@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, analyzeLetterWithAI, AIRiskScanResponse } from '../services/api';
-import { Sparkles, ShieldAlert, Send, ArrowLeft, AlertCircle, Upload, CheckCircle2 } from 'lucide-react';
+import { Sparkles, ShieldAlert, Send, ArrowLeft, AlertCircle, Upload, CheckCircle2, ShieldCheck } from 'lucide-react';
 
 interface ComposeLetterViewProps {
   user: UserProfile;
@@ -21,10 +21,10 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
 
   // AI Security Advisory Card State
   const [scanning, setScanning] = useState(false);
-  const [aiResult, setAiResult] = useState<AIRiskScanResponse | null>(null);
+  const [aiResult, setAiResult] = useState<AIRiskScanResponse & { compliance?: any } | null>(null);
   const [overridden, setOverridden] = useState(false);
 
-  // Auto-Extract Subject from Content (First 8-12 words of content if subject is empty or default)
+  // Auto-Extract Subject from Content (First 8-12 words of content if subject is empty)
   useEffect(() => {
     if (mode === 'text' && content.trim() !== '') {
       const firstSentence = content.split(/[.!?]/)[0].trim();
@@ -37,7 +37,6 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
 
   // Debounced Auto-trigger AI Security Scan (Triggers automatically 600ms after user stops typing)
   useEffect(() => {
-    // Only trigger if there is actual input to analyze
     const hasInput = mode === 'text' 
       ? (subject.trim() !== '' || content.trim() !== '')
       : (subject.trim() !== '' || attachedFile !== null);
@@ -289,7 +288,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
           </form>
         </div>
 
-        {/* AI Security Advisory Panel (Auto-scanning Indicators) */}
+        {/* AI Security Advisory Panel */}
         <div className="glass-card glass-card-glow" style={{ padding: '1.75rem', position: 'sticky', top: '100px', borderLeft: '4px solid var(--accent-cyan)' }}>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.85rem', marginBottom: '1.25rem' }}>
@@ -301,7 +300,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
           {scanning && (
             <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--accent-cyan)' }}>
               <Sparkles size={32} style={{ animation: 'spin 2s linear infinite', marginBottom: '0.75rem' }} />
-              <p style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>AI Agent sedang memindai kerahasiaan & risiko secara real-time...</p>
+              <p style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>AI Agent sedang memindai kepatuhan perihal & risiko teks...</p>
             </div>
           )}
 
@@ -309,7 +308,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
             <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--text-muted)' }}>
               <ShieldAlert size={36} style={{ opacity: 0.3, marginBottom: '0.75rem' }} />
               <p style={{ fontSize: '0.85rem', lineHeight: 1.4 }}>
-                Mulai mengetik perihal, isi surat dinas, atau lampirkan berkas. AI Agent akan langsung melakukan analisis secara otomatis.
+                Mulai mengetik perihal, isi surat dinas, atau lampirkan berkas. AI Agent akan langsung melakukan analisis perihal & konten secara otomatis.
               </p>
             </div>
           )}
@@ -317,7 +316,43 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
           {!scanning && aiResult && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               
-              {/* Risk Score Meter */}
+              {/* 1. DEDICATED SUBJECT COMPLIANCE REPORT */}
+              {aiResult.compliance && (
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid var(--border-glass)',
+                  borderRadius: '10px',
+                  padding: '1rem'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff' }}>Audit Kepatuhan Perihal</span>
+                    <span style={{
+                      fontSize: '9px', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '4px',
+                      backgroundColor: aiResult.compliance.compliance_status === 'COMPLIANT' ? 'rgba(16, 185, 129, 0.15)' : aiResult.compliance.compliance_status === 'WARNING' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                      color: aiResult.compliance.compliance_status === 'COMPLIANT' ? 'var(--accent-emerald)' : aiResult.compliance.compliance_status === 'WARNING' ? 'var(--accent-amber)' : 'var(--accent-crimson)'
+                    }}>
+                      {aiResult.compliance.compliance_status}
+                    </span>
+                  </div>
+
+                  {aiResult.compliance.recommendations.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      {aiResult.compliance.recommendations.map((rec: string, idx: number) => (
+                        <div key={idx} style={{ fontSize: '0.75rem', color: '#cbd5e1', display: 'flex', alignItems: 'start', gap: '0.35rem' }}>
+                          <span style={{ color: 'var(--accent-amber)' }}>•</span>
+                          <span>{rec}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--accent-emerald)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <ShieldCheck size={13} /> Perihal dinas memenuhi standar & aman dari kebocoran.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 2. Risk Score Meter */}
               <div style={{ background: 'rgba(10, 13, 22, 0.4)', padding: '1rem', borderRadius: '10px', border: '1px solid var(--border-glass)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
                   <span>Skor Risiko Kebocoran</span>
@@ -336,7 +371,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
                 </div>
               </div>
 
-              {/* Advisory Summary Box */}
+              {/* 3. Advisory Summary Box */}
               <div style={{
                 background: aiResult.risk_analysis.risk_score >= 7 ? 'rgba(244, 63, 94, 0.08)' : 'rgba(16, 185, 129, 0.08)',
                 borderLeft: aiResult.risk_analysis.risk_score >= 7 ? '3px solid var(--accent-crimson)' : '3px solid var(--accent-emerald)',
@@ -351,7 +386,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
                 {aiResult.recommendation.action_summary}
               </div>
 
-              {/* Detected Entities */}
+              {/* 4. Detected Entities */}
               {aiResult.risk_analysis.detected_risk_entities.length > 0 && (
                 <div>
                   <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Entitas Sensitif Terdeteksi:</span>
@@ -365,7 +400,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
                 </div>
               )}
 
-              {/* PII Redacted Preview (Only for Text Mode) */}
+              {/* 5. PII Redacted Preview (Only for Text Mode) */}
               {mode === 'text' && (
                 <div>
                   <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Hasil Sanitasi Data (PII Redacted):</span>
