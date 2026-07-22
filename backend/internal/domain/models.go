@@ -128,6 +128,8 @@ type Letter struct {
 	ContentHash           string               `json:"content_hash" db:"content_hash"`
 	Status                LetterStatus         `json:"status" db:"status"`
 	RevisionNotesEncrypted []byte              `json:"-" db:"revision_notes_encrypted"`
+	FilePath              *string              `json:"file_path" db:"file_path"`
+	FileSize              *int                 `json:"file_size" db:"file_size"`
 	CreatedAt             time.Time            `json:"created_at" db:"created_at"`
 	UpdatedAt             time.Time            `json:"updated_at" db:"updated_at"`
 

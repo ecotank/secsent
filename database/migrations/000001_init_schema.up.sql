@@ -130,6 +130,8 @@ CREATE TABLE letters (
     content_hash VARCHAR(128) NOT NULL,
     status letter_status_type NOT NULL DEFAULT 'DRAFT',
     revision_notes_encrypted BYTEA,
+    file_path VARCHAR(255),
+    file_size INT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

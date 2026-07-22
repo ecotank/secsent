@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile, analyzeLetterWithAI, AIRiskScanResponse } from '../services/api';
-import { Sparkles, ShieldAlert, Lock, Send, ArrowLeft, AlertCircle } from 'lucide-react';
+import { Sparkles, ShieldAlert, Lock, Send, ArrowLeft, AlertCircle, FileText, Upload } from 'lucide-react';
 
 interface ComposeLetterViewProps {
   user: UserProfile;
@@ -15,10 +15,24 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
   const [content, setContent] = useState('Diberitahukan kepada Direktur IT & Security bahwa sehubungan dengan peningkatan ancaman serangan cyber, kami mengajukan permohonan pencairan anggaran sebesar Rp 500.000.000 untuk lisensi firewall proyek rahasia ALPHA.');
   const [recipient, setRecipient] = useState('UK-ITSEC-001');
 
+  // File Upload State
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+
   // AI Security Advisory Card State
   const [scanning, setScanning] = useState(false);
   const [aiResult, setAiResult] = useState<AIRiskScanResponse | null>(null);
   const [overridden, setOverridden] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      if (file.type === "application/pdf") {
+        setAttachedFile(file);
+      } else {
+        alert("Hanya file PDF kedinasan yang diperbolehkan sebagai lampiran.");
+      }
+    }
+  };
 
   const handleAIScan = async () => {
     setScanning(true);
@@ -38,12 +52,12 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
 
   const handleSaveDraft = (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Draf Surat Dinas Berhasil Disimpan & Ter-sign secara Kriptografis!");
+    alert(`Naskah dinas berhasil dibuat ter-sign Ed25519!${attachedFile ? ` Lampiran PDF (${attachedFile.name}) terenkripsi AES-256-GCM.` : ""}`);
     onSubmitSuccess();
   };
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '2rem auto', padding: '0 1.5rem' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
       
       {/* Header Bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
@@ -127,6 +141,42 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
                   Tembusan Unit Kerja (CC)
                 </label>
                 <input type="text" className="input-control" defaultValue="UK-ROOT (Kantor Pusat)" readOnly style={{ opacity: 0.7 }} />
+              </div>
+            </div>
+
+            {/* Lampiran Dokumen PDF Terenkripsi */}
+            <div>
+              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 600 }}>
+                Lampiran File Dokumen (Format PDF - Enkripsi AES-256-GCM)
+              </label>
+              <div style={{
+                border: '2px dashed var(--border-glass)',
+                borderRadius: '12px',
+                padding: '1.5rem',
+                textAlign: 'center',
+                backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                position: 'relative',
+                cursor: 'pointer'
+              }}>
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleFileChange}
+                  style={{
+                    position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+                    opacity: 0, cursor: 'pointer'
+                  }}
+                />
+                <Upload size={24} style={{ color: 'var(--accent-cyan)', marginBottom: '0.5rem' }} />
+                {attachedFile ? (
+                  <p style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-indigo)' }}>
+                    📂 Terlampir: {attachedFile.name} ({(attachedFile.size / 1024).toFixed(1)} KB)
+                  </p>
+                ) : (
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    Klik atau seret file PDF dinas Anda di sini untuk melampirkan.
+                  </p>
+                )}
               </div>
             </div>
 

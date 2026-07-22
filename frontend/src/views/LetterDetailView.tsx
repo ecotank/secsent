@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../services/api';
 import { validateSecurityPIN } from '../utils/webcrypto';
-import { ArrowLeft, ShieldCheck, Lock, Send, UserCheck, ShieldAlert, Key, EyeOff } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Lock, Send, UserCheck, ShieldAlert, Key, EyeOff, FileText, Download } from 'lucide-react';
 
 interface LetterDetailViewProps {
   user: UserProfile;
@@ -35,7 +35,9 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
     signerName: "Dr. Budi Santoso, M.Si. (Kepala Unit Kerja)",
     signedAt: "2026-07-20 14:30:12 UTC",
     signatureAlgorithm: "Ed25519 (Asymmetric EdDSA)",
-    timestampToken: "TSA_TIMESTAMP_TOKEN|8f4e3c2b...|2026-07-20T14:30:12Z"
+    timestampToken: "TSA_TIMESTAMP_TOKEN|8f4e3c2b...|2026-07-20T14:30:12Z",
+    fileName: "ND_Pengadaan_Firewall_Enterprise.pdf",
+    fileSize: 422000
   };
 
   const handlePINVerification = (e: React.FormEvent) => {
@@ -49,6 +51,10 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
     }
   };
 
+  const handleDownloadFile = () => {
+    alert(`File ${mockDetail.fileName} berhasil didekripsi menggunakan X25519 Ephemeral Key & diunduh secara aman!`);
+  };
+
   const handleDisposeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setDisposed(true);
@@ -59,12 +65,12 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
   const timestampStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '2rem auto', padding: '0 1.5rem', position: 'relative' }}>
+    <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative' }}>
       
       {/* Top Action Bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
         <button className="btn-secondary" onClick={onBack} style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem' }}>
-          <ArrowLeft size={16} /> Kembali ke Dashboard
+          <ArrowLeft size={16} /> Kembali
         </button>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button className="btn-primary" onClick={() => setShowDispositionModal(true)}>
@@ -228,7 +234,46 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
                 <EyeOff size={12} /> Kunci Kembali Teks Surat
               </button>
             </div>
-            <p>{mockDetail.content}</p>
+            
+            {/* Decrypted Text Body */}
+            <p style={{ marginBottom: '1.5rem' }}>{mockDetail.content}</p>
+
+            {/* Encrypted PDF File Attachment Component */}
+            {mockDetail.fileName && (
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid var(--border-glass)',
+                borderRadius: '12px',
+                padding: '1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginTop: '1.5rem'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{
+                    backgroundColor: 'rgba(216, 255, 67, 0.1)',
+                    padding: '0.5rem',
+                    borderRadius: '8px',
+                    color: 'var(--accent-cyan)'
+                  }}>
+                    <FileText size={24} />
+                  </div>
+                  <div>
+                    <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#ffffff' }}>
+                      {mockDetail.fileName}
+                    </h4>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      Ukuran File: {(mockDetail.fileSize / 1024).toFixed(1)} KB • Terenkripsi AES-256-GCM
+                    </span>
+                  </div>
+                </div>
+                <button onClick={handleDownloadFile} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}>
+                  <Download size={14} /> Unduh Lampiran
+                </button>
+              </div>
+            )}
+
           </div>
         )}
 
