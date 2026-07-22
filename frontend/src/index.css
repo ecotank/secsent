@@ -1,33 +1,34 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap');
 
 /* ==========================================
-   SecureOffice-AI Premium Electric-Teal Design System
+   SecureOffice-AI - Tactical Forensic Evidence Design Adaption
    ========================================== */
 
 :root {
-  --bg-primary: #080d1a;
-  --bg-secondary: #0f172a;
-  --bg-card: rgba(15, 23, 42, 0.8);
-  --bg-card-hover: rgba(30, 41, 59, 0.95);
+  --bg-primary: #07100f;
+  --bg-secondary: #091513;
+  --bg-card: #0b1714;
+  --bg-card-hover: #0e201b;
 
-  --accent-cyan: #00f2fe;
-  --accent-indigo: #4facfe;
-  --accent-emerald: #10b981;
-  --accent-amber: #f59e0b;
-  --accent-crimson: #ef4444;
+  --accent-cyan: #d8ff43;      /* Neon Lime Green Primary */
+  --accent-indigo: #79dcb8;    /* Soft Teal / Sage Emerald */
+  --accent-emerald: #79dcb8;   /* Soft Green Verification */
+  --accent-amber: #e9a84f;     /* Warm Amber Warning */
+  --accent-crimson: #ff6b6b;   /* Threat Alert Red */
 
-  --text-main: #ffffff;
-  --text-muted: #e2e8f0;
-  --text-dim: #94a3b8;
+  --text-main: #e8eee8;        /* Bright Minty Slate */
+  --text-muted: #87958a;       /* Warm Sage Muted */
+  --text-dim: #657368;         /* Deep Moss Gray */
 
-  --border-glass: rgba(255, 255, 255, 0.12);
-  --border-cyan: rgba(0, 242, 254, 0.35);
+  --border-glass: rgba(255, 255, 255, 0.1);
+  --border-cyan: rgba(216, 255, 67, 0.25);
 
-  --shadow-glow: 0 0 25px rgba(0, 242, 254, 0.2);
-  --shadow-card: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 30px rgba(216, 255, 67, 0.08);
+  --shadow-card: 0 10px 40px rgba(0, 0, 0, 0.5);
 
-  --font-heading: 'Outfit', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  --font-heading: 'Archivo', sans-serif;
+  --font-body: 'Archivo', sans-serif;
+  --font-mono: 'DM Mono', monospace;
 }
 
 * {
@@ -44,31 +45,31 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.5;
-  background-image: 
-    radial-gradient(circle at 10% 15%, rgba(0, 242, 254, 0.08) 0%, transparent 45%),
-    radial-gradient(circle at 90% 85%, rgba(79, 172, 254, 0.1) 0%, transparent 45%);
+}
+
+::selection {
+  background: var(--accent-cyan);
+  color: var(--bg-primary);
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 
-/* Glassmorphism Card Utility with Teal Glow */
+/* Glassmorphism Tactical Card */
 .glass-card {
   background: var(--bg-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border-glass);
-  border-radius: 16px;
+  border-radius: 12px;
   box-shadow: var(--shadow-card);
 }
 
 .glass-card:hover {
   transform: translateY(-2px);
-  border-color: var(--accent-cyan);
-  box-shadow: 0 15px 40px 0 rgba(0, 242, 254, 0.15);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.7);
 }
 
 .glass-card-glow {
@@ -76,33 +77,40 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--shadow-glow);
 }
 
-/* Gradient Text (Electric Teal to Cobalt Blue) */
+/* Dynamic Gradient / Neon Text */
 .gradient-text {
-  background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-indigo) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: 850;
+  color: var(--text-main);
+  background: none;
+  -webkit-background-clip: unset;
+  -webkit-text-fill-color: unset;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-bottom: 2px solid var(--accent-cyan);
+  display: inline-block;
+  padding-bottom: 0.2rem;
 }
 
-/* Button Component Styles - Electric Teal to Cobalt Blue Gradient (No Rainbow) */
+/* Tactical Flat Button Component (Forensic Lime Background) */
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-indigo) 100%);
-  color: #050b14;
+  background: var(--accent-cyan);
+  color: var(--bg-secondary);
   font-weight: 700;
   padding: 0.75rem 1.5rem;
-  border-radius: 10px;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   font-family: var(--font-body);
-  box-shadow: 0 4px 15px rgba(0, 242, 254, 0.25);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(216, 255, 67, 0.15);
 }
 
 .btn-primary:hover {
-  transform: translateY(-1.5px);
-  box-shadow: 0 6px 20px rgba(0, 242, 254, 0.4);
+  background: #ecff88;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(216, 255, 67, 0.35);
 }
 
 .btn-primary:active {
@@ -115,7 +123,7 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid var(--border-glass);
   font-weight: 600;
   padding: 0.75rem 1.5rem;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -127,14 +135,14 @@ h1, h2, h3, h4, h5, h6 {
   border-color: var(--accent-cyan);
 }
 
-/* Form Input Control with Teal Glow */
+/* Input Form Controls */
 .input-control {
   width: 100%;
-  background: rgba(8, 13, 26, 0.9);
+  background: var(--bg-primary);
   border: 1px solid var(--border-glass);
   color: var(--text-main);
-  padding: 0.8rem 1rem;
-  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
   font-size: 0.95rem;
   font-family: var(--font-body);
   outline: none;
@@ -142,36 +150,37 @@ h1, h2, h3, h4, h5, h6 {
 
 .input-control:focus {
   border-color: var(--accent-cyan);
-  background: #0f172a;
-  box-shadow: 0 0 12px rgba(0, 242, 254, 0.25);
+  box-shadow: 0 0 0 2px rgba(216, 255, 67, 0.2);
 }
 
-/* Badge Pills */
+/* Badge Pills - Tactical styling */
 .badge {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.3rem 0.85rem;
-  border-radius: 9999px;
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
   font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-.badge-secret { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
-.badge-confidential { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-.badge-restricted { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
-.badge-unclassified { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+.badge-secret { background: rgba(255, 107, 107, 0.12); color: var(--accent-crimson); border: 1px solid rgba(255, 107, 107, 0.3); }
+.badge-confidential { background: rgba(233, 168, 79, 0.12); color: var(--accent-amber); border: 1px solid rgba(233, 168, 79, 0.3); }
+.badge-restricted { background: rgba(121, 220, 184, 0.12); color: var(--accent-indigo); border: 1px solid rgba(121, 220, 184, 0.3); }
+.badge-unclassified { background: rgba(255, 255, 255, 0.05); color: var(--text-muted); border: 1px solid var(--border-glass); }
 
 /* Table Styling */
 th {
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-weight: 400;
   text-transform: uppercase;
-  font-size: 0.75rem;
-  color: var(--accent-cyan);
-  letter-spacing: 0.05em;
-  padding: 1.1rem 1rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  padding: 1rem;
 }
 
 /* Custom Scrollbar */
@@ -182,7 +191,7 @@ th {
   background: var(--bg-primary);
 }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--accent-cyan), var(--accent-indigo));
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
