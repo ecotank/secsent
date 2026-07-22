@@ -25,15 +25,19 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
   const [aiResult, setAiResult] = useState<AIRiskScanResponse & { compliance?: any } | null>(null);
   const [overridden, setOverridden] = useState(false);
 
-  // Auto-Extract Subject from Content (First 8-12 words of content if subject is empty and not manually edited)
+  // Auto-Extract Subject from Content (Always matches content dynamically if subject is not manually edited)
   useEffect(() => {
     if (isSubjectManuallyEdited) return;
-    if (mode === 'text' && content.trim() !== '') {
-      const firstSentence = content.split(/[.!?]/)[0].trim();
-      const words = firstSentence.split(/\s+/).slice(0, 10).join(' ');
-      if (words.length > 5 && (!subject || subject.length < 15)) {
-        setSubject(words + "...");
+    if (mode === 'text') {
+      const trimmed = content.trim();
+      if (trimmed === '') {
+        setSubject('');
+        return;
       }
+      const firstSentence = trimmed.split(/[.!?]/)[0].trim();
+      const wordsArray = firstSentence.split(/\s+/);
+      const words = wordsArray.slice(0, 10).join(' ');
+      setSubject(words + (wordsArray.length > 10 ? "..." : ""));
     }
   }, [content, mode, isSubjectManuallyEdited]);
 
