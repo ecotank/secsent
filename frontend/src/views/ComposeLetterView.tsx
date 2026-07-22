@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile, analyzeLetterWithAI, AIRiskScanResponse } from '../services/api';
-import { Sparkles, ShieldAlert, Lock, Send, ArrowLeft, AlertCircle, FileText, Upload } from 'lucide-react';
+import { Sparkles, ShieldAlert, Send, ArrowLeft, AlertCircle, Upload } from 'lucide-react';
 
 interface ComposeLetterViewProps {
   user: UserProfile;
@@ -12,10 +12,9 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
   const [category, setCategory] = useState('NOTA_DINAS');
   const [subject, setSubject] = useState('Permohonan Pengadaan Perangkat Keamanan Jaringan & Firewall Enterprise');
   const [classification, setClassification] = useState<'BIASA' | 'TERBATAS' | 'RAHASIA' | 'SANGAT_RAHASIA'>('BIASA');
-  const [content, setContent] = useState('Diberitahukan kepada Direktur IT & Security bahwa sehubungan dengan peningkatan ancaman serangan cyber, kami mengajukan permohonan pencairan anggaran sebesar Rp 500.000.000 untuk lisensi firewall proyek rahasia ALPHA.');
   const [recipient, setRecipient] = useState('UK-ITSEC-001');
 
-  // File Upload State
+  // File Upload State (Mandatory for File-Based System)
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
 
   // AI Security Advisory Card State
@@ -26,10 +25,10 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      if (file.type === "application/pdf") {
+      if (file.type === "application/pdf" || file.name.endsWith(".docx") || file.name.endsWith(".doc")) {
         setAttachedFile(file);
       } else {
-        alert("Hanya file PDF kedinasan yang diperbolehkan sebagai lampiran.");
+        alert("Hanya berkas resmi format PDF atau Word (Docx/Doc) yang diperbolehkan.");
       }
     }
   };
@@ -38,7 +37,8 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
     setScanning(true);
     setOverridden(false);
     try {
-      const result = await analyzeLetterWithAI(content, subject);
+      // AI scans the Subject/Perihal for risk entities and clearance validation
+      const result = await analyzeLetterWithAI(subject, subject);
       setAiResult(result);
       if (result.recommendation.recommended_classification) {
         setClassification(result.recommendation.recommended_classification as any);
@@ -52,7 +52,11 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
 
   const handleSaveDraft = (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Naskah dinas berhasil dibuat ter-sign Ed25519!${attachedFile ? ` Lampiran PDF (${attachedFile.name}) terenkripsi AES-256-GCM.` : ""}`);
+    if (!attachedFile) {
+      alert("Kesalahan: Anda wajib melampirkan berkas dokumen resmi naskah dinas.");
+      return;
+    }
+    alert(`Sukses: Berkas "${attachedFile.name}" berhasil dienkripsi penuh (AES-256-GCM) & dikirimkan secara aman ke unit tujuan!`);
     onSubmitSuccess();
   };
 
@@ -65,7 +69,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
           <ArrowLeft size={16} /> Kembali
         </button>
         <div style={{ textAlign: 'right' }}>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 700 }} className="gradient-text">Penyusunan Naskah Dinas</h2>
+          <h2 style={{ fontSize: '1.6rem', fontWeight: 700 }} className="gradient-text">Pengiriman Dokumen Dinas</h2>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
             Nomor Naskah Otomatis: <strong style={{ color: 'var(--accent-cyan)' }}>ND/005/UK-SEC-001/VII/2026</strong>
           </span>
@@ -103,9 +107,32 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 600 }}>
-                Perihal Surat
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                  Perihal Surat Dinas
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAIScan}
+                  disabled={scanning}
+                  style={{
+                    background: 'rgba(0, 209, 196, 0.08)',
+                    border: '1px solid var(--border-cyan)',
+                    color: 'var(--accent-cyan)',
+                    padding: '0.35rem 0.85rem',
+                    borderRadius: '8px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <Sparkles size={14} /> {scanning ? 'Memindai Perihal...' : 'Scan Perihal via AI'}
+                </button>
+              </div>
               <input
                 type="text"
                 className="input-control"
@@ -144,78 +171,52 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
               </div>
             </div>
 
-            {/* Lampiran Dokumen PDF Terenkripsi */}
+            {/* Wajib Unggah Berkas Dokumen Dinas Resmi */}
             <div>
               <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: 600 }}>
-                Lampiran File Dokumen (Format PDF - Enkripsi AES-256-GCM)
+                Dokumen Resmi Naskah Dinas (Wajib PDF/Docx - Enkripsi AES-256-GCM)
               </label>
               <div style={{
-                border: '2px dashed var(--border-glass)',
+                border: '2px dashed var(--accent-cyan)',
                 borderRadius: '12px',
-                padding: '1.5rem',
+                padding: '2.5rem 1.5rem',
                 textAlign: 'center',
-                backgroundColor: 'rgba(255, 255, 255, 0.02)',
+                backgroundColor: 'rgba(216, 255, 67, 0.02)',
                 position: 'relative',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
               }}>
                 <input
                   type="file"
-                  accept="application/pdf"
+                  accept="application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword"
                   onChange={handleFileChange}
                   style={{
                     position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
                     opacity: 0, cursor: 'pointer'
                   }}
+                  required={!attachedFile}
                 />
-                <Upload size={24} style={{ color: 'var(--accent-cyan)', marginBottom: '0.5rem' }} />
+                <Upload size={32} style={{ color: 'var(--accent-cyan)', marginBottom: '0.75rem' }} />
                 {attachedFile ? (
-                  <p style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--accent-indigo)' }}>
-                    📂 Terlampir: {attachedFile.name} ({(attachedFile.size / 1024).toFixed(1)} KB)
-                  </p>
+                  <div>
+                    <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ffffff', marginBottom: '0.25rem' }}>
+                      📂 Berkas Terpilih: {attachedFile.name}
+                    </p>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--accent-indigo)' }}>
+                      Ukuran: {(attachedFile.size / 1024).toFixed(1)} KB • Siap Diamankan & Dikirim
+                    </span>
+                  </div>
                 ) : (
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    Klik atau seret file PDF dinas Anda di sini untuk melampirkan.
-                  </p>
+                  <div>
+                    <p style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)' }}>
+                      Klik atau seret file dokumen dinas Anda ke sini
+                    </p>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                      Mendukung berkas resmi instansi (PDF, DOCX)
+                    </p>
+                  </div>
                 )}
               </div>
-            </div>
-
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                  Isi Teks Naskah Dinas
-                </label>
-                <button
-                  type="button"
-                  onClick={handleAIScan}
-                  disabled={scanning}
-                  style={{
-                    background: 'rgba(0, 209, 196, 0.08)',
-                    border: '1px solid var(--border-cyan)',
-                    color: 'var(--accent-cyan)',
-                    padding: '0.35rem 0.85rem',
-                    borderRadius: '8px',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.4rem',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  <Sparkles size={14} /> {scanning ? 'Memindai Teks...' : 'Jalankan AI Security Scan'}
-                </button>
-              </div>
-              <textarea
-                className="input-control"
-                rows={8}
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Tuliskan isi surat dinas secara lengkap di sini..."
-                required
-                style={{ resize: 'vertical' }}
-              />
             </div>
 
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', marginTop: '1rem', borderTop: '1px solid var(--border-glass)', paddingTop: '1.25rem' }}>
@@ -223,7 +224,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
                 Batal
               </button>
               <button type="submit" className="btn-primary">
-                Simpan & Ajukan Tanda Tangan <Send size={16} />
+                Enkripsi & Kirim Surat <Send size={16} />
               </button>
             </div>
 
@@ -242,7 +243,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
             <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--text-muted)' }}>
               <ShieldAlert size={36} style={{ opacity: 0.3, marginBottom: '0.75rem' }} />
               <p style={{ fontSize: '0.85rem', lineHeight: 1.4 }}>
-                Klik tombol **"Jalankan AI Security Scan"** untuk mendeteksi entitas PII sensitif, skor risiko kebocoran data, dan memverifikasi kesesuaian clearance surat otomatis.
+                Klik tombol **"Scan Perihal via AI"** untuk memindai tingkat kerahasiaan perihal surat secara otomatis sebelum dikirimkan.
               </p>
             </div>
           ) : (
@@ -280,28 +281,6 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
                   Rekomendasi Klasifikasi:
                 </div>
                 {aiResult.recommendation.action_summary}
-              </div>
-
-              {/* Detected Entities */}
-              {aiResult.risk_analysis.detected_risk_entities.length > 0 && (
-                <div>
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Entitas Sensitif Terdeteksi:</span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '0.5rem' }}>
-                    {aiResult.risk_analysis.detected_risk_entities.map((ent, idx) => (
-                      <div key={idx} style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.02)', padding: '0.5rem 0.75rem', borderRadius: '8px', border: '1px solid var(--border-glass)' }}>
-                        <span style={{ color: 'var(--accent-amber)', fontWeight: 600 }}>[{ent.entity_type}]</span> {ent.phrase}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* PII Redacted Preview */}
-              <div>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Hasil Sanitasi Data (PII Redacted):</span>
-                <div style={{ fontSize: '0.75rem', background: 'rgba(10, 13, 22, 0.5)', padding: '0.75rem', borderRadius: '8px', color: 'var(--text-muted)', border: '1px solid var(--border-glass)', marginTop: '0.35rem', maxHeight: '100px', overflowY: 'auto', lineHeight: 1.4 }}>
-                  {aiResult.sanitized_text}
-                </div>
               </div>
 
               {/* HITL Override Status */}
