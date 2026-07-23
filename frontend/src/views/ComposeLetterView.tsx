@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, analyzeLetterWithAI, AIRiskScanResponse } from '../services/api';
 import { Sparkles, ShieldAlert, Send, ArrowLeft, AlertCircle, Upload, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { logUnitActivity } from '../utils/webcrypto';
 
 interface ComposeLetterViewProps {
   user: UserProfile;
@@ -102,8 +103,87 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
       alert("Kesalahan: Anda wajib melampirkan berkas dokumen resmi naskah dinas.");
       return;
     }
+
+    // Load existing letters
+    const localLettersJson = localStorage.getItem("local_letters");
+    const localLetters = localLettersJson ? JSON.parse(localLettersJson) : [
+      {
+        id: "BK-2026-0918",
+        letterId: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+        number: "ND/001/UK-SEC-001/VII/2026",
+        subject: "Permohonan Pengadaan Perangkat Keamanan Jaringan & Firewall Enterprise",
+        category: "NOTA_DINAS",
+        classification: "RAHASIA",
+        sender: "Bagian Persuratan & TU",
+        recipient: "Direktorat IT & Security",
+        status: "SIGNED",
+        date: "2026-07-20 14:32",
+        color: "emerald"
+      },
+      {
+        id: "BK-2026-0917",
+        letterId: "8a2ceb3c-2a6c-3aac-8acc-1a0c6a2cba5c",
+        number: "SE/004/UK-ROOT/VII/2026",
+        subject: "Himbauan Kepatuhan Protokol Keamanan Informasi & Password Manager",
+        category: "SURAT_EDARAN",
+        classification: "BIASA",
+        sender: "Kantor Pusat / Sekretariat Utama",
+        recipient: "Seluruh Unit Kerja",
+        status: "SENT",
+        date: "2026-07-19 11:08",
+        color: "lime"
+      },
+      {
+        id: "BK-2026-0916",
+        letterId: "7f1bfa2b-1a5b-2aab-7abb-0a9b5a1ba4eb",
+        number: "ND/002/UK-SEC-001/VII/2026",
+        subject: "Draft Usulan Anggaran Operasional Kegiatan Triwulan IV",
+        category: "NOTA_DINAS",
+        classification: "TERBATAS",
+        sender: "Bagian Persuratan & TU",
+        recipient: "Kepala Unit Kerja",
+        status: "PENDING_SIGNATURE",
+        date: "2026-07-20 16:45",
+        color: "amber"
+      }
+    ];
+
+    // Compute sequences
+    const nextSeqNum = localLetters.length + 1;
+    const categoryCode = 
+      category === 'NOTA_DINAS' ? 'ND' :
+      category === 'SURAT_EDARAN' ? 'SE' :
+      category === 'SURAT_KEPUTUSAN' ? 'SK' : 'UND';
+    
+    const generatedNumber = `${categoryCode}/${String(nextSeqNum).padStart(3, '0')}/UK-SEC-001/VII/2026`;
+    const newId = `BK-2026-09${18 + nextSeqNum}`;
+    const newLetterId = "ltr-" + Math.random().toString(36).substring(2, 11);
+
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    const newLetter = {
+      id: newId,
+      letterId: newLetterId,
+      number: generatedNumber,
+      subject: subject.trim() || `Naskah Dinas Tanpa Judul #${nextSeqNum}`,
+      category,
+      classification,
+      sender: user.full_name || "Staf Pelaksana Sektoral",
+      recipient: recipient === 'UK-ITSEC-001' ? 'Direktorat Keamanan Informasi' : 'Kantor Pusat / Sekretariat Utama',
+      status: "SENT",
+      date: dateStr,
+      color: classification === 'RAHASIA' ? 'amber' : 'emerald'
+    };
+
+    localLetters.unshift(newLetter); // Add to the top of list
+    localStorage.setItem("local_letters", JSON.stringify(localLetters));
+
+    // Log the unit activity
+    logUnitActivity(user.username, `Mengirim Dokumen Dinas ${newLetter.number} (${newLetter.classification})`, "SUCCESS");
+
     const modeStr = mode === 'text' ? "Pesan Teks Dinas" : `File "${attachedFile?.name}"`;
-    alert(`Sukses: ${modeStr} berhasil dienkripsi penuh (AES-256-GCM) & dikirimkan secara aman ke unit tujuan!`);
+    alert(`Sukses: ${modeStr} berhasil dienkripsi penuh (AES-256-GCM) & dikirimkan secara aman ke unit tujuan dengan nomor ${newLetter.number}!`);
     onSubmitSuccess();
   };
 

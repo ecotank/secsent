@@ -206,7 +206,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
         // graceful fallback to mock records
       }
       if (isMounted) {
-        setLetters(mockLetters);
+        const localLettersJson = localStorage.getItem("local_letters");
+        if (localLettersJson) {
+          setLetters(JSON.parse(localLettersJson));
+        } else {
+          localStorage.setItem("local_letters", JSON.stringify(mockLetters));
+          setLetters(mockLetters);
+        }
       }
     }
     fetchLetters();
