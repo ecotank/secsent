@@ -234,22 +234,34 @@ export async function analyzeLetterWithAI(text: string, subject: string): Promis
 
   // Dynamic Subject Concluding/Formulation Engine
   let concludedSubject = "Pemberitahuan Koordinasi Pelaksanaan Kegiatan Operasional";
-  if (textLower.includes("anggaran") || textLower.includes("biaya") || textLower.includes("pengadaan")) {
+  if (textLower.includes("pemberitahuan")) {
+    concludedSubject = "Surat Pemberitahuan";
+  } else if (textLower.includes("himbauan")) {
+    concludedSubject = "Surat Himbauan";
+  } else if (textLower.includes("undangan")) {
+    concludedSubject = "Surat Undangan";
+  } else if (textLower.includes("keputusan")) {
+    concludedSubject = "Surat Keputusan";
+  } else if (textLower.includes("nota dinas")) {
+    concludedSubject = "Nota Dinas";
+  } else if (textLower.includes("edaran")) {
+    concludedSubject = "Surat Edaran";
+  } else if (textLower.includes("permohonan")) {
+    concludedSubject = "Surat Permohonan";
+  } else if (textLower.includes("instruksi")) {
+    concludedSubject = "Surat Instruksi";
+  } else if (textLower.includes("anggaran") || textLower.includes("biaya") || textLower.includes("pengadaan")) {
     if (textLower.includes("keamanan") || textLower.includes("firewall") || textLower.includes("jaringan")) {
       concludedSubject = "Permohonan Pengadaan Perangkat Keamanan Jaringan & Firewall Enterprise";
     } else {
       concludedSubject = "Permohonan Pengadaan Sarana dan Prasarana Operasional Instansi";
     }
   } else if (textLower.includes("password") || textLower.includes("token") || textLower.includes("kunci") || textLower.includes("sandi")) {
-    if (textLower.includes("himbauan") || textLower.includes("edaran") || textLower.includes("kepatuhan")) {
+    if (textLower.includes("kepatuhan")) {
       concludedSubject = "Himbauan Kepatuhan Protokol Keamanan Informasi dan Sandi";
     } else {
       concludedSubject = "Pengaturan Ulang Akses Kredensial Keamanan Ekosistem";
     }
-  } else if (textLower.includes("rapat") || textLower.includes("undangan") || textLower.includes("menghadiri") || textLower.includes("pertemuan")) {
-    concludedSubject = "Undangan Rapat Pembahasan Agenda Koordinasi Internal Unit Kerja";
-  } else if (textLower.includes("menetapkan") || textLower.includes("keputusan") || textLower.includes("sk") || textLower.includes("memutuskan")) {
-    concludedSubject = "Surat Keputusan Pengangkatan Pejabat Pelaksana Kegiatan";
   } else {
     const firstSentence = text.split(".")[0].trim();
     const wordsArr = firstSentence.split(/\s+/);

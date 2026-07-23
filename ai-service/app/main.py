@@ -56,19 +56,36 @@ def classify_document(request: ClassifierRequest):
 
 def conclude_subject_from_text(text: str) -> str:
     text_lower = text.lower()
+    
+    # 1. Identify primary formal correspondence types
+    if "pemberitahuan" in text_lower:
+        return "Surat Pemberitahuan"
+    if "himbauan" in text_lower:
+        return "Surat Himbauan"
+    if "undangan" in text_lower:
+        return "Surat Undangan"
+    if "keputusan" in text_lower:
+        return "Surat Keputusan"
+    if "nota dinas" in text_lower:
+        return "Nota Dinas"
+    if "edaran" in text_lower:
+        return "Surat Edaran"
+    if "permohonan" in text_lower:
+        return "Surat Permohonan"
+    if "instruksi" in text_lower:
+        return "Surat Instruksi"
+
+    # 2. Key-based contextual fallbacks
     if "anggaran" in text_lower or "biaya" in text_lower or "pengadaan" in text_lower:
         if "keamanan" in text_lower or "firewall" in text_lower or "jaringan" in text_lower:
             return "Permohonan Pengadaan Perangkat Keamanan Jaringan & Firewall Enterprise"
         return "Permohonan Pengadaan Sarana dan Prasarana Operasional Instansi"
     if "password" in text_lower or "token" in text_lower or "kunci" in text_lower or "sandi" in text_lower:
-        if "himbauan" in text_lower or "edaran" in text_lower or "kepatuhan" in text_lower:
+        if "kepatuhan" in text_lower:
             return "Himbauan Kepatuhan Protokol Keamanan Informasi dan Sandi"
         return "Pengaturan Ulang Akses Kredensial Keamanan Ekosistem"
-    if "rapat" in text_lower or "undangan" in text_lower or "menghadiri" in text_lower or "pertemuan" in text_lower:
-        return "Undangan Rapat Pembahasan Agenda Koordinasi Internal Unit Kerja"
-    if "menetapkan" in text_lower or "keputusan" in text_lower or "sk" in text_lower or "memutuskan" in text_lower:
-        return "Surat Keputusan Pengangkatan Pejabat Pelaksana Kegiatan"
-    # Fallback to smart first-sentence summarization if no keyword matches
+    
+    # 3. Text Summarization fallback
     first_sentence = text.split(".")[0].strip()
     words = first_sentence.split()
     if len(words) > 8:
