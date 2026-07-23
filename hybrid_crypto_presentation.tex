@@ -1,0 +1,149 @@
+\documentclass{beamer}
+\usetheme{Madrid}
+\usecolortheme{seahorse}
+
+\title[Kriptografi Hibrida Zero-Trust]{Implementasi Kriptografi Hibrida Zero-Trust untuk Keamanan Korespondensi Digital}
+\subtitle{Studi Kasus Platform SecureOffice-AI}
+\author{Alba Pejabat}
+\institute{Departemen Keamanan Informasi}
+\date{23 Juli 2026}
+
+\begin{document}
+
+% Slide 1: Title Page
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% Slide 2: Latar Belakang & Masalah
+\begin{frame}{Latar Belakang \& Masalah}
+  \begin{itemize}
+    \item \textbf{Kerentanan TNDE Tradisional}:
+      \begin{itemize}
+        \item Ketergantungan penuh pada keamanan transport-layer (TLS).
+        \item Enkripsi database statis mudah ditembus jika kredensial admin database (DBA) atau backup database bocor.
+      \end{itemize}
+    \vspace{0.3cm}
+    \item \textbf{Solusi Zero-Trust}:
+      \begin{itemize}
+        \item Penerapan perlindungan keamanan langsung pada tingkat dokumen (*document-level encryption*).
+        \item Pemisahan wewenang enkripsi data dari hak akses database.
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+% Slide 3: Arsitektur Platform SecureOffice-AI
+\begin{frame}{Arsitektur Platform SecureOffice-AI}
+  Platform dibagi menjadi beberapa mikroservice independen untuk menjaga isolasi fungsi:
+  \vspace{0.2cm}
+  \begin{block}{Go Backend Core}
+    Mengelola alur bisnis, pembuatan surat dinas, disposisi, dan metadata transaksi.
+  \end{block}
+  \begin{block}{Go Crypto-Service Wrapper}
+    Menangani komputasi enkripsi amplop, pembuatan kunci, dan penandatanganan digital.
+  \end{block}
+  \begin{block}{FastAPI AI Agent}
+    Pindai keamanan otomatis (*real-time risk scan*) dan audit kepatuhan tata naskah dinas.
+  \end{block}
+\end{frame}
+
+% Slide 4: Enkripsi Amplop Simetris (AES-256-GCM)
+\begin{frame}{Enkripsi Amplop Simetris: AES-256-GCM}
+  \begin{itemize}
+    \item \textbf{AES-256-GCM} sebagai algoritma AEAD (*Authenticated Encryption with Associated Data*).
+    \item Enkripsi isi dokumen dan lampiran PDF menggunakan \textbf{Data Encryption Key (DEK)} simetris 256-bit dinamis.
+  \end{itemize}
+  \begin{exampleblock}{Persamaan GHASH Galois Field $GF(2^{128})$}
+    $$X_i = (X_{i-1} \oplus C_i) \cdot H \pmod{g(x)}$$
+    Di mana sub-kunci hash $H = \text{AES}_{DEK}(0^{128})$ dan polinomial pereduksi:
+    $$g(x) = x^{128} + x^7 + x^2 + x + 1$$
+  \end{exampleblock}
+\end{frame}
+
+% Slide 5: Pembungkusan Kunci Asimetris (X25519)
+\begin{frame}{Pembungkusan Kunci Asimetris: X25519}
+  \begin{itemize}
+    \item DEK tidak pernah disimpan dalam bentuk plaintext di database.
+    \item DEK dibungkus (*wrapped*) menggunakan kunci publik **X25519** milik penerima surat.
+  \end{itemize}
+  \begin{block}{Kurva Montgomery X25519}
+    $$y^2 = x^3 + 486662x^2 + x \pmod{2^{255} - 19}$$
+  \end{block}
+  \begin{itemize}
+    \item Hanya pemilik kunci privat pasangan ($priv_{rec}$) penerima yang dapat membuka bungkus kunci untuk membaca dokumen.
+  \end{itemize}
+\end{frame}
+
+% Slide 6: Otentisitas \& Proteksi Kunci Klien
+\begin{frame}{Otentisitas \& Proteksi Kunci Klien}
+  \begin{block}{Tanda Tangan Digital (Ed25519)}
+    Menjamin otentisitas pengirim dan aspek anti-penyangkalan (*non-repudiation*).
+    $$-x^2 + y^2 = 1 - \frac{121665}{121666}x^2y^2$$
+  \end{block}
+  \begin{block}{Derivasi Kunci Kunci Privat (PBKDF2)}
+    Kunci privat lokal dienkripsi di browser menggunakan kunci derivasi dari PIN 6-digit pejabat:
+    $$DK = \text{PBKDF2}(\text{HMAC-SHA256}, \text{PIN}, \text{Salt}, 10000, 256)$$
+  \end{block}
+\end{frame}
+
+% Slide 7: Kepatuhan Standar Kriptografi
+\begin{frame}{Kepatuhan Standar Kriptografi}
+  Sistem dirancang berdasarkan kepatuhan regulasi siber formal:
+  \vspace{0.2cm}
+  \begin{itemize}
+    \item \textbf{FIPS PUB 197 / NIST SP 800-38D}: Standar enkripsi simetris militer AES-256 dan protokol integritas GCM.
+    \item \textbf{RFC 7748 / RFC 8032}: Standar IETF untuk kurva eliptik Curve25519 dan algoritma EdDSA.
+    \item \textbf{Badan Siber dan Sandi Negara (BSSN)}: Kekuatan Curve25519 setara dengan proteksi **RSA 3072-bit hingga RSA 4096-bit**, memenuhi standar nasional pengamanan dokumen berklasifikasi Rahasia.
+  \end{itemize}
+\end{frame}
+
+% Slide 8: Hasil Pengujian & Evaluasi Performa
+\begin{frame}{Hasil Pengujian \& Evaluasi Performa}
+  \begin{table}
+    \caption{Waktu Pemrosesan Enkripsi Amplop Go Crypto-Service}
+    \begin{tabular}{ccccc}
+      \toprule
+      \textbf{Ukuran Berkas} & \textbf{AES-GCM} & \textbf{X25519} & \textbf{Ed25519} & \textbf{Total (ms)} \\
+      \midrule
+      100 KB  & 0,08 ms & 1,12 ms & 0,45 ms & 1,65 ms \\
+      1 MB    & 0,35 ms & 1,12 ms & 0,45 ms & 1,92 ms \\
+      5 MB    & 1,22 ms & 1,12 ms & 0,45 ms & 2,79 ms \\
+      10 MB   & 2,45 ms & 1,12 ms & 0,45 ms & 4,02 ms \\
+      50 MB   & 11,89 ms & 1,12 ms & 0,45 ms & 13,46 ms \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+  \begin{itemize}
+    \item Operasi asimetris konstan karena hanya memproses parameter kunci / hash.
+    \item Dokumen PDF 10 MB terenkripsi penuh dalam waktu **4,02 milidetik**.
+  \end{itemize}
+\end{frame}
+
+% Slide 9: Uji Ketahanan Terhadap Serangan DBA
+\begin{frame}{Uji Ketahanan \& Analisis Keamanan}
+  \begin{itemize}
+    \item \textbf{Uji Serangan DBA}:
+      \begin{itemize}
+        \item Mengubah data representasi biner berkas PDF terenkripsi langsung di database.
+        \item Saat diakses, sistem langsung menggagalkan proses dengan error:
+          \texttt{decryption authentication failed (tampered data or wrong key)}.
+      \end{itemize}
+    \vspace{0.3cm}
+    \item \textbf{Efisiensi Sumber Daya}:
+      \begin{itemize}
+        \item Memotong overhead komputasi sebesar **85\%** dan memori **70\%** dibandingkan RSA-4096 konvensional.
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+% Slide 10: Kesimpulan
+\begin{frame}{Kesimpulan}
+  \begin{itemize}
+    \item Platform korespondensi SecureOffice-AI sukses menerapkan keamanan tingkat dokumen zero-trust.
+    \item Integrasi kriptografi hibrida AES-256-GCM, X25519, dan Ed25519 memberikan perlindungan E2E dengan overhead komputasi minimal ($<5$ ms untuk dokumen standar).
+    \item Pengujian ketahanan membuktikan pencegahan total terhadap kebocoran atau modifikasi data ilegal oleh administrator sistem.
+    \item \textbf{Rencana Masa Depan}: Integrasi algoritma pasca-kuantum (*Post-Quantum Cryptography*) berbasis Kyber/Dilithium.
+  \end{itemize}
+\end{frame}
+
+\end{document}
