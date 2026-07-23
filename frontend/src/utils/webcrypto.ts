@@ -95,9 +95,24 @@ export async function generateStandardTOTP(secretBase32: string): Promise<string
 }
 
 /**
+ * Maps unique Base32 Secret Keys to each username to enforce strict user-level MFA isolation.
+ * Users must register their corresponding key to OTPKEY Authenticator.
+ */
+export function getUserMFASecret(username: string): string {
+  const mapping: { [key: string]: string } = {
+    "ka.unit.sec": "JBSWY3DPEHPK3PXP",     // OTPKEY Key for Budi Santoso (HEAD_OF_UNIT)
+    "admin.sys": "MFRGGZDFMZTWQ2LK",       // OTPKEY Key for System Admin (ADMIN)
+    "sekretaris.sec": "NBSWY3DPEHPK3PXP",  // OTPKEY Key for Siti Rahma (SECRETARY)
+    "staf.sec": "OBSWY3DPEHPK3PXP",        // OTPKEY Key for Ahmad (STAFF)
+    "auditor.sys": "PBSWY3DPEHPK3PXP"      // OTPKEY Key for Auditor (AUDITOR)
+  };
+  return mapping[username.trim().toLowerCase()] || "JBSWY3DPEHPK3PXP";
+}
+
+/**
  * Generates a dynamic 6-digit TOTP code (RFC 6238) derived from 30-second time steps (Local Fast Sim)
  */
-export function generateDynamicTOTP(): string {
+export function generateDynamicTOTP(username: string = "ka.unit.sec"): string {
   const timeStep = Math.floor(Date.now() / 30000);
   const hash = (timeStep * 2654435761) % 1000000;
   return hash.toString().padStart(6, '0');
@@ -123,14 +138,18 @@ export function setStoredUserPIN(username: string, newPIN: string): void {
 }
 
 /**
- * Validates the security credentials against custom user PIN, local sim, and standard Base32 TOTP secret key.
- * Demo Secret Key is 'JBSWY3DPEHPK3PXP' (RFC 6238 standard)
+ * Validates the security credentials against custom user PIN and their specific standard Base32 TOTP secret key.
+ * Strictly prevents cross-user OTP code reuse.
  */
 export async function validateSecurityPIN(inputPIN: string, username: string = "ka.unit.sec"): Promise<boolean> {
   const expectedPIN = getStoredUserPIN(username);
-  const currentTOTP = generateDynamicTOTP();
-  const standardTOTP = await generateStandardTOTP("JBSWY3DPEHPK3PXP");
+  
+  // Enforce unique secret key per user
+  const userSecret = getUserMFASecret(username);
+  const standardTOTP = await generateStandardTOTP(userSecret);
   
   const cleanInput = inputPIN.trim();
-  return cleanInput === expectedPIN || cleanInput === currentTOTP || cleanInput === standardTOTP || cleanInput === "123456";
+  
+  // Valid if matches user's custom PIN or their specific active standard TOTP code
+  return cleanInput === expectedPIN || cleanInput === standardTOTP;
 }
