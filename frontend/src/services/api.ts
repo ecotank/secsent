@@ -120,7 +120,7 @@ export async function loginUser(username: string, password: string, mfaCode: str
           unit_code: "UK-SEC-001",
           unit_name: "Bagian Persuratan & Tata Usaha"
         },
-        password_change_required: true // Force onboarding wizard on login
+        password_change_required: foundUser.password_change_required !== false
       }
     };
   }

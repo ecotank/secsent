@@ -140,6 +140,15 @@ export function App() {
       <OnboardingWizardView
         user={user}
         onComplete={() => {
+          const localUsersJson = localStorage.getItem("local_registered_users");
+          if (localUsersJson) {
+            const localUsers = JSON.parse(localUsersJson);
+            const idx = localUsers.findIndex((u: any) => u.username === user.username);
+            if (idx !== -1) {
+              localUsers[idx].password_change_required = false;
+              localStorage.setItem("local_registered_users", JSON.stringify(localUsers));
+            }
+          }
           setUser({ ...user, password_change_required: false });
         }}
       />
