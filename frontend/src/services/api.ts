@@ -22,6 +22,7 @@ export interface UserProfile {
     unit_code: string;
     unit_name: string;
   };
+  password_change_required?: boolean;
 }
 
 export interface AIRiskScanResponse {
@@ -122,7 +123,8 @@ export async function loginUser(username: string, password: string, mfaCode: str
       work_unit: {
         unit_code: "UK-SEC-001",
         unit_name: "Bagian Persuratan & Tata Usaha"
-      }
+      },
+      password_change_required: username.trim().toLowerCase() !== "ka.unit.sec" && username.trim().toLowerCase() !== "admin.sys"
     }
   };
 }

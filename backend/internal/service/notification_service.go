@@ -24,15 +24,12 @@ func NewNotificationService() *NotificationService {
 	}
 }
 
-// SendAlert sends instant notification to Telegram and logs mock WhatsApp dispatch
+// SendAlert sends instant notification to Telegram only
 func (s *NotificationService) SendAlert(ctx context.Context, message string) error {
 	timestamp := time.Now().Format("2006-01-02 15:04:05 MST")
 	formattedMsg := fmt.Sprintf("🔔 *SECUREOFFICE-AI ALERT*\n⏱️ %s\n\n%s", timestamp, message)
 
-	// 1. Mock WhatsApp Gateway Logging
-	fmt.Printf("[WA-MOCK-GATEWAY] Sending Notification to Official Group:\n---\n%s\n---\n", message)
-
-	// 2. Telegram Bot Integration (If Configured)
+	// Telegram Bot Integration (If Configured)
 	if s.telegramBotToken != "" && s.telegramChatID != "" {
 		url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", s.telegramBotToken)
 		body, _ := json.Marshal(map[string]string{

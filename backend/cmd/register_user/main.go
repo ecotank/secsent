@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"secureoffice/backend/internal/config"
 	"secureoffice/backend/internal/database"
+	"secureoffice/backend/internal/service"
 	"secureoffice/backend/pkg/utils"
 )
 
@@ -125,6 +126,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("Gagal mendaftarkan user ke database: %v", err)
 	}
+
+	// 8. Trigger Telegram Bot Notification Alert
+	notifSvc := service.NewNotificationService()
+	alertMsg := fmt.Sprintf(
+		"Pendaftaran Akun Baru Berhasil!\n\nNama Lengkap: %s\nUsername: %s\nRole: %s\nClearance: %s\n\nInstruksi: Selesaikan onboarding wajib mengganti password & aktifkan MFA OTPKEY pada login pertama.",
+		fullName, username, role, clearance,
+	)
+	_ = notifSvc.SendAlert(context.Background(), alertMsg)
 
 	fmt.Println("\n==================================================")
 	fmt.Println("🎉 AKUN PEGAWAI BERHASIL DIDAFTARKAN!")

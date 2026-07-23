@@ -4,6 +4,7 @@ import { LoginView } from './views/LoginView';
 import { DashboardView } from './views/DashboardView';
 import { ComposeLetterView } from './views/ComposeLetterView';
 import { LetterDetailView } from './views/LetterDetailView';
+import { OnboardingWizardView } from './views/OnboardingWizardView';
 import { getStoredUserPIN, setStoredUserPIN } from './utils/webcrypto';
 import { Lock, ShieldAlert, Key, CheckCircle2 } from 'lucide-react';
 
@@ -132,6 +133,17 @@ export function App() {
 
   if (!token || !user) {
     return <LoginView onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  if (user.password_change_required) {
+    return (
+      <OnboardingWizardView
+        user={user}
+        onComplete={() => {
+          setUser({ ...user, password_change_required: false });
+        }}
+      />
+    );
   }
 
   const initials = user.full_name ? user.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'PJ';
