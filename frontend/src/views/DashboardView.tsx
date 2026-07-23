@@ -460,17 +460,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
                   <p>PIN Default: <code>123456</code></p>
                   
                   <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.75rem', marginTop: '0.5rem' }}>
-                    <span style={{ fontSize: '10px', color: '#8b9a8d', display: 'block', marginBottom: '0.25rem' }}>Kunci Base32 OTPKEY:</span>
-                    <code style={{ fontSize: '0.75rem', color: '#d8ff43', wordBreak: 'break-all' }}>{regSuccess.secret}</code>
-                  </div>
-
-                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.75rem' }}>
-                    <span style={{ fontSize: '10px', color: '#8b9a8d', display: 'block', marginBottom: '0.25rem' }}>Tautan URI Authenticator:</span>
-                    <code style={{ fontSize: '9px', color: '#79dcb8', wordBreak: 'break-all' }}>{regSuccess.otpauthURI}</code>
+                    <span style={{ fontSize: '10px', color: '#8b9a8d', display: 'block', marginBottom: '0.25rem' }}>Keamanan Transmisi:</span>
+                    <span style={{ fontSize: '0.75rem', color: '#d8ff43', fontWeight: 600 }}>🔒 METODE AKTIVASI MANDIRI AKTIF</span>
                   </div>
 
                   <p style={{ fontSize: '0.75rem', color: '#8b9a8d', marginTop: '0.5rem', lineHeight: '1.4' }}>
-                    💡 <em>Silakan salin Kunci Base32 di atas ke aplikasi **OTPKEY Authenticator** Windows pegawai tersebut untuk mengaktifkan MFA.</em>
+                    💡 <em>Sesuai prinsip Zero-Trust, Kunci Base32 OTPKEY dan QR Code tidak ditampilkan di sini. Pegawai tersebut akan dipandu secara otomatis di layarnya sendiri untuk melakukan konfigurasi OTPKEY pada saat login pertama kali.</em>
                   </p>
                 </div>
               </div>
