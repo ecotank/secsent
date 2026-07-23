@@ -25,6 +25,11 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
   const [aiResult, setAiResult] = useState<AIRiskScanResponse & { compliance?: any } | null>(null);
   const [overridden, setOverridden] = useState(false);
 
+  // References to prevent infinite state update loops
+  const lastScannedContent = React.useRef("");
+  const lastScannedSubject = React.useRef("");
+  const lastScannedFile = React.useRef<string | null>(null);
+
   // Debounced Auto-trigger AI Security Scan (Triggers automatically 600ms after user stops typing)
   useEffect(() => {
     const hasInput = mode === 'text' 
@@ -33,6 +38,15 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
 
     if (!hasInput) {
       setAiResult(null);
+      return;
+    }
+
+    const fileKey = attachedFile ? attachedFile.name : null;
+    const isUnchanged = mode === 'text'
+      ? (content === lastScannedContent.current && subject === lastScannedSubject.current)
+      : (fileKey === lastScannedFile.current && subject === lastScannedSubject.current);
+
+    if (isUnchanged) {
       return;
     }
 
@@ -45,13 +59,19 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
           : `Perihal: ${subject}\n\n[FILE ATTACHMENT]: ${attachedFile ? attachedFile.name : ''}`;
 
         const result = await analyzeLetterWithAI(textToScan, subject);
-        setAiResult(result);
+        
+        lastScannedContent.current = content;
+        lastScannedFile.current = fileKey;
 
         // Dynamically set concluded formal subject line if user has not manually typed one yet
         if (!isSubjectManuallyEdited && result.suggested_subject) {
+          lastScannedSubject.current = result.suggested_subject;
           setSubject(result.suggested_subject);
+        } else {
+          lastScannedSubject.current = subject;
         }
 
+        setAiResult(result);
         if (result.recommendation.recommended_classification) {
           setClassification(result.recommendation.recommended_classification as any);
         }
