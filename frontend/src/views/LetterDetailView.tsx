@@ -40,9 +40,10 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
     contentHash: "8f4e3c2b1a9f0d8e7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d"
   };
 
-  const handlePINVerification = (e: React.FormEvent) => {
+  const handlePINVerification = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateSecurityPIN(pinInput, user.username)) {
+    const isValid = await validateSecurityPIN(pinInput, user.username);
+    if (isValid) {
       setIsSecretUnlocked(true);
       setPinError('');
       setPinInput('');

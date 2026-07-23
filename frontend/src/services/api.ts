@@ -62,7 +62,8 @@ export async function loginUser(username: string, password: string, mfaCode: str
     throw new Error("Kode Verifikasi MFA/TOTP (6-Digit) Wajib Diisi & Harus Valid.");
   }
 
-  if (!validateSecurityPIN(cleanMFA, username)) {
+  const isValid = await validateSecurityPIN(cleanMFA, username);
+  if (!isValid) {
     throw new Error("Kode Verifikasi MFA/TOTP (6-Digit) tidak cocok atau telah kadaluarsa.");
   }
 
