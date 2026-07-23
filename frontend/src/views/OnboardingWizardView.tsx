@@ -210,17 +210,27 @@ export const OnboardingWizardView: React.FC<OnboardingWizardViewProps> = ({ user
             
             <div style={{
               backgroundColor: '#091513', border: '1px solid var(--border-glass)',
-              borderRadius: '8px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem'
+              borderRadius: '8px', padding: '1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem'
             }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Tautan Registrasi Authenticator:</span>
-              <code style={{ fontSize: '0.75rem', color: '#d8ff43', wordBreak: 'break-all' }}>
-                {otpauthURI}
-              </code>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
-                <QrCode size={18} style={{ color: 'var(--accent-cyan)' }} />
-                <span style={{ fontSize: '0.75rem', color: '#e8eee8' }}>
-                  Kunci Rahasia Base32: <strong>{secret}</strong>
+              {/* Visual QR Code Image */}
+              <div style={{ padding: '0.5rem', backgroundColor: '#ffffff', borderRadius: '6px', display: 'inline-block' }}>
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(otpauthURI)}`}
+                  alt="MFA QR Code"
+                  style={{ display: 'block', width: '150px', height: '150px' }}
+                />
+              </div>
+
+              <div style={{ width: '100%', textAlign: 'left' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>
+                  Kunci Rahasia Base32 (Untuk Input Manual di Windows OTPKEY):
                 </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <QrCode size={18} style={{ color: 'var(--accent-cyan)' }} />
+                  <code style={{ fontSize: '0.85rem', color: '#d8ff43', letterSpacing: '0.05em' }}>
+                    <strong>{secret}</strong>
+                  </code>
+                </div>
               </div>
             </div>
 
