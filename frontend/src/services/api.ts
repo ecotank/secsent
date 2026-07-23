@@ -4,7 +4,7 @@
  * Includes Strict MFA / TOTP 6-Digit Enforcement and instant 2.0s AbortController timeout fallback
  */
 
-import { validateSecurityPIN } from '../utils/webcrypto';
+import { validateSecurityPIN, logUnitActivity } from '../utils/webcrypto';
 
 export const BACKEND_URL = "http://localhost:8080/api/v1";
 export const CRYPTO_URL = "http://localhost:8081/api/v1";
@@ -65,8 +65,10 @@ export async function loginUser(username: string, password: string, mfaCode: str
 
   const isValid = await validateSecurityPIN(cleanMFA, username);
   if (!isValid) {
+    logUnitActivity(username, "Gagal Login (Kode MFA Tidak Sah)", "FAILED");
     throw new Error("Kode Verifikasi MFA/TOTP (6-Digit) tidak cocok atau telah kadaluarsa.");
   }
+  logUnitActivity(username, "Sesi Login Baru (MFA Sukses)", "SUCCESS");
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 2000);

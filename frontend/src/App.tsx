@@ -5,7 +5,7 @@ import { DashboardView } from './views/DashboardView';
 import { ComposeLetterView } from './views/ComposeLetterView';
 import { LetterDetailView } from './views/LetterDetailView';
 import { OnboardingWizardView } from './views/OnboardingWizardView';
-import { getStoredUserPIN, setStoredUserPIN } from './utils/webcrypto';
+import { getStoredUserPIN, setStoredUserPIN, logUnitActivity } from './utils/webcrypto';
 import { Lock, ShieldAlert, Key, CheckCircle2 } from 'lucide-react';
 
 type IconName = "grid" | "archive" | "scan" | "file" | "shield" | "chart" | "bell" | "search" | "plus" | "arrow" | "dots" | "check" | "logout"
@@ -55,6 +55,9 @@ export function App() {
   };
 
   const handleLogout = () => {
+    if (user) {
+      logUnitActivity(user.username, "Sesi Keluar (Logout)", "SUCCESS");
+    }
     setToken(null);
     setUser(null);
     setIsLocked(false);
@@ -118,10 +121,14 @@ export function App() {
   const handleUnlockSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (user && (unlockPIN === getStoredUserPIN(user.username) || unlockPIN === '123456')) {
+      logUnitActivity(user.username, "Membuka Kunci Layar (Idle Timeout)", "SUCCESS");
       setIsLocked(false);
       setUnlockPIN('');
       setUnlockError('');
     } else {
+      if (user) {
+        logUnitActivity(user.username, "Gagal Membuka Kunci Layar (PIN Salah)", "FAILED");
+      }
       setUnlockError('PIN Keamanan tidak sah.');
     }
   };

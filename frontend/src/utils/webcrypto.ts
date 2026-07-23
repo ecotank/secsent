@@ -159,3 +159,38 @@ export async function validateSecurityPIN(inputPIN: string, username: string = "
   // Valid if matches user's custom PIN or their specific active standard TOTP code
   return cleanInput === expectedPIN || cleanInput === standardTOTP;
 }
+
+export interface AccessLog {
+  timestamp: string;
+  username: string;
+  action: string;
+  status: "SUCCESS" | "FAILED";
+  client: string;
+}
+
+/**
+ * Logs unit activities locally to simulate dynamic auditing for the Head of Unit.
+ */
+export function logUnitActivity(username: string, action: string, status: "SUCCESS" | "FAILED" = "SUCCESS") {
+  const logsJson = localStorage.getItem("local_unit_access_logs");
+  const logs: AccessLog[] = logsJson ? JSON.parse(logsJson) : [
+    { timestamp: "2026-07-23 09:30:12", username: "sekretaris.sec", action: "Sesi Login Baru (MFA Sukses)", status: "SUCCESS", client: "Chrome (Windows)" },
+    { timestamp: "2026-07-23 09:35:45", username: "sekretaris.sec", action: "Penyusunan Draf Surat Baru (ND/001)", status: "SUCCESS", client: "Chrome (Windows)" },
+    { timestamp: "2026-07-23 10:15:22", username: "ka.unit.sec", action: "Sesi Login Baru (MFA Sukses)", status: "SUCCESS", client: "Edge (Windows)" },
+    { timestamp: "2026-07-23 10:20:05", username: "ka.unit.sec", action: "Dekripsi Dokumen Surat Masuk", status: "SUCCESS", client: "Edge (Windows)" },
+    { timestamp: "2026-07-23 10:21:40", username: "ka.unit.sec", action: "Tanda Tangan Digital Surat (ND/001)", status: "SUCCESS", client: "Edge (Windows)" }
+  ];
+
+  const now = new Date();
+  const timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+  
+  logs.unshift({
+    timestamp,
+    username,
+    action,
+    status,
+    client: "Browser Client (Secure)"
+  });
+
+  localStorage.setItem("local_unit_access_logs", JSON.stringify(logs.slice(0, 100)));
+}

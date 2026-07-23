@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../services/api';
-import { validateSecurityPIN } from '../utils/webcrypto';
+import { validateSecurityPIN, logUnitActivity } from '../utils/webcrypto';
 import { ArrowLeft, ShieldCheck, Lock, Send, UserCheck, ShieldAlert, Key, EyeOff, FileText, Download } from 'lucide-react';
 
 interface LetterDetailViewProps {
@@ -44,15 +44,18 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
     e.preventDefault();
     const isValid = await validateSecurityPIN(pinInput, user.username);
     if (isValid) {
+      logUnitActivity(user.username, `Dekripsi Surat Rahasia (${mockDetail.number})`, "SUCCESS");
       setIsSecretUnlocked(true);
       setPinError('');
       setPinInput('');
     } else {
+      logUnitActivity(user.username, `Gagal Dekripsi Surat (${mockDetail.number}) - PIN/OTP Salah`, "FAILED");
       setPinError('PIN Keamanan atau Kode TOTP Authenticator tidak sah.');
     }
   };
 
   const handleDownloadFile = () => {
+    logUnitActivity(user.username, `Mengunduh Berkas Lampiran Terenkripsi (${mockDetail.fileName})`, "SUCCESS");
     alert(`Sukses: Dokumen dinas "${mockDetail.fileName}" berhasil didekripsi menggunakan Kunci Sektoral X25519 & diunduh secara aman via secure channel!`);
   };
 
