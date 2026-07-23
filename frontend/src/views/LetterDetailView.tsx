@@ -56,6 +56,49 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
 
   const handleDownloadFile = () => {
     logUnitActivity(user.username, `Mengunduh Berkas Lampiran Terenkripsi (${mockDetail.fileName})`, "SUCCESS");
+    
+    // Generate physical decrypted document blob to trigger actual browser download
+    const documentText = `===========================================================
+     SECUREOFFICE-AI: DECRYPTED CORRESPONDENCE PORTAL      
+===========================================================
+Nomor Naskah: ${mockDetail.number}
+Kategori    : ${mockDetail.category}
+Klasifikasi : ${mockDetail.classification}
+Perihal     : ${mockDetail.subject}
+Pengirim    : ${mockDetail.senderUnit}
+Waktu Kirim : ${mockDetail.signedAt}
+Aktor Unduh : ${user.full_name} (${user.role})
+
+-----------------------------------------------------------
+[DECRYPTION ENGINE STATUS]: SUCCESSFUL
+[ENVELOPE DECRYPTION MODE]: ECIES Hybrid (X25519-AES-GCM)
+[FILE INTEGRITY SECURE]   : SHA-256 Checksum Valid.
+-----------------------------------------------------------
+
+ISI NASKAH DINAS DEKRIPSI:
+${mockDetail.content}
+
+-----------------------------------------------------------
+⚠️ Peringatan: Dokumen ini bersifat RAHASIA NEGARA dan dilindungi
+oleh hukum persandian serta keamanan siber instansi.
+Penyebaran tanpa otorisasi terikat ancaman hukum pidana.
+===========================================================`;
+
+    const blob = new Blob([documentText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    
+    const downloadName = mockDetail.fileName.endsWith('.pdf')
+      ? mockDetail.fileName.replace('.pdf', '_DECRYPTED.txt')
+      : mockDetail.fileName + '_DECRYPTED.txt';
+      
+    link.download = downloadName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
     alert(`Sukses: Dokumen dinas "${mockDetail.fileName}" berhasil didekripsi menggunakan Kunci Sektoral X25519 & diunduh secara aman via secure channel!`);
   };
 
