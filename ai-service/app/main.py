@@ -74,6 +74,32 @@ def conclude_subject_from_text(text: str) -> str:
         return "Surat Permohonan"
     if "instruksi" in text_lower:
         return "Surat Instruksi"
+    if "tugas" in text_lower or "surat tugas" in text_lower:
+        return "Surat Tugas Pelaksanaan Kegiatan"
+    if "perintah" in text_lower or "sprint" in text_lower:
+        return "Surat Perintah Kerja"
+    if "pengantar" in text_lower:
+        return "Surat Pengantar Dokumen"
+    if "kuasa" in text_lower:
+        return "Surat Kuasa Khusus"
+    if "keterangan" in text_lower:
+        return "Surat Keterangan Resmi"
+    if "pernyataan" in text_lower:
+        return "Surat Pernyataan Kesanggupan"
+    if "pengumuman" in text_lower:
+        return "Surat Pengumuman Resmi"
+    if "perjanjian" in text_lower or "kontrak" in text_lower:
+        return "Surat Perjanjian Kerja Sama"
+    if "dispensasi" in text_lower:
+        return "Surat Dispensasi Operasional"
+    if "rekomendasi" in text_lower:
+        return "Surat Rekomendasi Jabatan"
+    if "laporan" in text_lower or "pertanggungjawaban" in text_lower or "sptjb" in text_lower:
+        return "Laporan Pertanggungjawaban Realisasi Anggaran"
+    if "telaahan staf" in text_lower:
+        return "Telaahan Staf Kajian Strategis"
+    if "piagam" in text_lower or "sertifikat" in text_lower:
+        return "Piagam Penghargaan Atas Prestasi Kerja"
 
     # 2. Key-based contextual fallbacks
     if "anggaran" in text_lower or "biaya" in text_lower or "pengadaan" in text_lower:

@@ -250,6 +250,32 @@ export async function analyzeLetterWithAI(text: string, subject: string): Promis
     concludedSubject = "Surat Permohonan";
   } else if (textLower.includes("instruksi")) {
     concludedSubject = "Surat Instruksi";
+  } else if (textLower.includes("tugas") || textLower.includes("surat tugas")) {
+    concludedSubject = "Surat Tugas Pelaksanaan Kegiatan";
+  } else if (textLower.includes("perintah") || textLower.includes("sprint")) {
+    concludedSubject = "Surat Perintah Kerja";
+  } else if (textLower.includes("pengantar")) {
+    concludedSubject = "Surat Pengantar Dokumen";
+  } else if (textLower.includes("kuasa")) {
+    concludedSubject = "Surat Kuasa Khusus";
+  } else if (textLower.includes("keterangan")) {
+    concludedSubject = "Surat Keterangan Resmi";
+  } else if (textLower.includes("pernyataan")) {
+    concludedSubject = "Surat Pernyataan Kesanggupan";
+  } else if (textLower.includes("pengumuman")) {
+    concludedSubject = "Surat Pengumuman Resmi";
+  } else if (textLower.includes("perjanjian") || textLower.includes("kontrak")) {
+    concludedSubject = "Surat Perjanjian Kerja Sama";
+  } else if (textLower.includes("dispensasi")) {
+    concludedSubject = "Surat Dispensasi Operasional";
+  } else if (textLower.includes("rekomendasi")) {
+    concludedSubject = "Surat Rekomendasi Jabatan";
+  } else if (textLower.includes("laporan") || textLower.includes("pertanggungjawaban") || textLower.includes("sptjb")) {
+    concludedSubject = "Laporan Pertanggungjawaban Realisasi Anggaran";
+  } else if (textLower.includes("telaahan staf")) {
+    concludedSubject = "Telaahan Staf Kajian Strategis";
+  } else if (textLower.includes("piagam") || textLower.includes("sertifikat")) {
+    concludedSubject = "Piagam Penghargaan Atas Prestasi Kerja";
   } else if (textLower.includes("anggaran") || textLower.includes("biaya") || textLower.includes("pengadaan")) {
     if (textLower.includes("keamanan") || textLower.includes("firewall") || textLower.includes("jaringan")) {
       concludedSubject = "Permohonan Pengadaan Perangkat Keamanan Jaringan & Firewall Enterprise";
