@@ -41,6 +41,13 @@ Skema keamanan standar seperti TLS (Transport Layer Security) hanya mengamankan 
 
 Paper ini membahas implementasi jalur pipa kriptografi hibrida berbasis zero-trust pada ekosistem \textit{SecureOffice-AI}. Kami menggabungkan cipher blok simetris dengan kriptografi kunci publik kurva eliptik untuk memastikan aspek kerahasiaan (*confidentiality*), integritas (*integrity*), otentisitas (*authenticity*), dan anti-penyangkalan (*non-repudiation*).
 
+\section{Tinjauan Pustaka}
+Penelitian tentang keamanan dokumen digital telah berkembang pesat. Kelemahan utama dalam penyimpanan cloud tradisional terletak pada ketergantungan penuh terhadap penyedia layanan cloud. Untuk mengatasi masalah tersebut, konsep enkripsi amplop (*envelope encryption*) diperkenalkan untuk memisahkan enkripsi data dari manajemen kunci.
+
+Kriptografi kurva eliptik (ECC) menawarkan alternatif berkinerja tinggi dibandingkan RSA tradisional. Penggunaan Curve25519 yang dikembangkan oleh Daniel J. Bernstein terbukti memberikan perlindungan yang sangat kuat terhadap serangan saluran samping (*side-channel attacks*) dengan konsumsi daya komputasi yang minimal.
+
+Selain aspek enkripsi, jaminan non-repudiation sangat vital dalam persuratan resmi negara. Penggunaan tanda tangan digital berbasis Ed25519 (EdDSA) terbukti lebih aman dibandingkan algoritma ECDSA tradisional karena proses penandatanganannya bersifat deterministik dan tidak bergantung pada pembangkit bilangan acak yang bias selama runtime.
+
 \section{Primitif Kriptografi dan Desain Sistem}
 Platform korespondensi zero-trust kami menggunakan arsitektur mikroservice yang memisahkan logika bisnis utama (Go backend), operasi kriptografi (Go crypto-service), dan pemindaian klasifikasi dokumen oleh AI (FastAPI AI service). Elemen-elemen kriptografi hibrida tersebut dijelaskan sebagai berikut.
 
@@ -55,7 +62,11 @@ di mana $C$ menyatakan ciphertext, $T$ menyatakan tag otentikasi 128-bit, dan $N
 \begin{equation}
 g(x) = x^{128} + x^7 + x^2 + x + 1
 \end{equation}
-Persamaan ini menjamin bahwa setiap perubahan pada ciphertext $C$ atau nonce akan mengakibatkan kegagalan verifikasi pada saat proses dekripsi dilakukan.
+Proses pembentukan fungsi hash kunci Galois (GHASH) didefinisikan sebagai perkalian polinomial berturut-turut pada field dengan kunci hash sub-kunci $H$:
+\begin{equation}
+X_i = (X_{i-1} \oplus C_i) \cdot H \pmod{g(x)}
+\end{equation}
+di mana $H = \text{AES}_{DEK}(0^{128})$. Persamaan ini menjamin bahwa setiap perubahan pada ciphertext $C$ atau nonce akan mengakibatkan kegagalan verifikasi pada saat proses dekripsi dilakukan.
 
 \subsection{Pembungkusan Kunci Asimetris: X25519}
 Untuk mendistribusikan $DEK$ secara aman kepada unit penerima tanpa mengeksposnya ke database, kami menerapkan protokol pembungkusan kunci X25519 Elliptic Curve Diffie-Hellman (ECDH).
@@ -87,6 +98,13 @@ Proses verifikasi dilakukan oleh penerima menggunakan kunci publik pengirim $pub
 \text{Valid} = \text{Ed25519-Verify}(pub_{sig}, H(P), \sigma)
 \end{equation}
 
+\subsection{Derivasi Kunci Berbasis PIN: PBKDF2}
+Kunci privat asimetris tidak disimpan dalam bentuk plaintext di penyimpanan lokal browser. Sistem menerapkan algoritma derivasi kunci berbasis kata sandi (PBKDF2) menggunakan fungsi HMAC-SHA256 untuk memproteksi kunci di sisi klien:
+\begin{equation}
+DK = \text{PBKDF2}(\text{HMAC-SHA256}, \text{PIN}, \text{Salt}, c, 256)
+\end{equation}
+di mana jumlah iterasi $c = 10000$ dan menghasilkan Kunci Dekripsi ($DK$) 256-bit untuk mendekripsi kunci privat lokal.
+
 \section{Kepatuhan Standar Kriptografi Internasional dan Nasional}
 Untuk memastikan tingkat kepercayaan, keandalan, dan kepatuhan hukum yang tinggi bagi instansi pemerintah dan publik, arsitektur kriptografi hibrida pada platform SecureOffice-AI dirancang dengan merujuk pada standar-standar keamanan siber formal:
 
@@ -110,6 +128,14 @@ Di Indonesia, Badan Siber dan Sandi Negara (BSSN) melalui Pedoman Penggunaan Alg
     \item Kunci simetris minimal AES-128 (SecureOffice-AI melampaui standar dengan menerapkan AES-256).
     \item Kriptografi kunci publik berbasis kurva eliptik (ECC) Curve25519 memiliki panjang kunci 256-bit yang setara dengan kekuatan kunci RSA 3072-bit hingga 4096-bit, memenuhi spesifikasi pengamanan naskah dinas klasifikasi Rahasia dan Sangat Rahasia.
 \end{itemize}
+
+\section{Logika Agen Kecerdasan Buatan (AI Subsystem)}
+Untuk mendukung pengambilan keputusan klasifikasi surat secara otomatis, SecureOffice-AI mengintegrasikan subsistem AI Multi-Agent. Agen ini memindai naskah dinas secara debounced (600 ms) untuk menilai tingkat risiko.
+Aturan evaluasi skor risiko didefinisikan sebagai fungsi dari frekuensi kecocokan kata kunci sensitif pertahanan ($H_m$) dan keuangan ($M_m$):
+\begin{equation}
+S = 1.00 + (H_m \times 2.50) + (M_m \times 1.20)
+\end{equation}
+di mana skor akhir dibatasi maksimal 10.00. Dokumen yang memperoleh skor $S \geq 7.50$ direkomendasikan secara otomatis menggunakan enkripsi hibrida klasifikasi **RAHASIA**.
 
 \section{Implementasi Sistem dan Alur Kerja}
 Alur kerja kriptografi hibrida zero-trust pada platform SecureOffice-AI mengikuti tahapan berikut:
@@ -176,7 +202,7 @@ Tabel~\ref{tab:benchmarks} merinci waktu eksekusi enkripsi simetris (AES-256-GCM
 1 MB    & 0,35 & 1,12 & 0,45 & 1,92 \\
 5 MB    & 1,22 & 1,12 & 0,45 & 2,79 \\
 10 MB   & 2,45 & 1,12 & 0,45 & 4,02 \\
-50 MB   & 11,89 & 1.12 & 0.45 & 13.46 \\
+50 MB   & 11,89 & 1,12 & 0,45 & 13.46 \\
 \bottomrule
 \end{tabular}
 \label{tab:benchmarks}
