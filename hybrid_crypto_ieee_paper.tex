@@ -14,12 +14,12 @@
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \begin{document}
 
-\title{Implementation of Zero-Trust Hybrid Cryptography with AES-256-GCM and X25519 for Secure Digital Correspondence in Public Administrations\\
-{\footnotesize \textsuperscript{*}Focus on SecureOffice-AI Platform Correspondence Security}}
+\title{Implementasi Kriptografi Hibrida Zero-Trust Menggunakan AES-256-GCM dan X25519 untuk Keamanan Korespondensi Digital pada Administrasi Publik\\
+{\footnotesize \textsuperscript{*}Fokus pada Keamanan Persuratan Platform SecureOffice-AI}}
 
 \author{\IEEEauthorblockN{Alba Pejabat}
-\IEEEauthorblockA{\textit{Department of Information Security} \\
-\textit{SecureOffice-AI Engineering Team}\\
+\IEEEauthorblockA{\textit{Departemen Keamanan Informasi} \\
+\textit{Tim Rekayasa Perangkat Lunak SecureOffice-AI}\\
 Jakarta, Indonesia \\
 alba@secureoffice.internal}
 }
@@ -27,153 +27,152 @@ alba@secureoffice.internal}
 \maketitle
 
 \begin{abstract}
-Secure digital correspondence between public administration units is vital to protect government secrets from cyberespionage, tampering, and unauthorized leaks. Traditional correspondence platforms rely heavily on transport-layer security (TLS) or static database encryption, leaving data vulnerable to database administrator compromises or server breaches. This paper presents a zero-trust hybrid cryptography architecture implemented within the SecureOffice-AI digital correspondence platform. Our model implements AES-256-GCM for high-throughput symmetric envelope encryption of document payloads and PDF files, combined with X25519 elliptic curve key wrapping for secure peer-to-peer key distribution. Additionally, Ed25519 digital signatures are utilized to guarantee non-repudiation and sender authenticity, reinforced by a hash-chained SHA-256 audit log. Computational evaluations show that our Go-based crypto-service wrapper handles envelope encryption in less than 3 ms for typical 10 MB PDF attachments, proving it highly suitable for production enterprise environments.
+Keamanan korespondensi digital antar unit kerja pada instansi administrasi publik sangat krusial untuk melindungi rahasia negara dari spionase siber, manipulasi data, dan kebocoran informasi. Platform korespondensi tradisional umumnya sangat bergantung pada keamanan lapisan transport (TLS) atau enkripsi database statis, yang rentan terhadap penyalahgunaan wewenang oleh administrator database maupun kebocoran server. Penelitian ini menyajikan arsitektur kriptografi hibrida berprinsip zero-trust yang diimplementasikan pada platform korespondensi digital SecureOffice-AI. Model yang diusulkan mengimplementasikan algoritma AES-256-GCM untuk enkripsi amplop simetris (envelope encryption) dengan throughput tinggi pada isi dokumen dan lampiran berkas PDF, yang dikombinasikan dengan pembungkusan kunci kurva eliptik X25519 untuk distribusi kunci aman peer-to-peer. Selain itu, tanda tangan digital Ed25519 diterapkan untuk menjamin aspek non-repudiation dan otentisitas pengirim, diperkuat oleh log audit rantai hash SHA-256. Evaluasi performa menunjukkan bahwa layanan kripto berbasis bahasa Go mampu memproses enkripsi amplop dalam waktu kurang dari 3 ms untuk lampiran PDF berukuran 10 MB, membuktikan efisiensinya untuk skala produksi enterprise.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Hybrid Cryptography, AES-256-GCM, X25519, Ed25519, Zero-Trust Correspondence, Envelope Encryption.
+Kriptografi Hibrida, AES-256-GCM, X25519, Ed25519, Korespondensi Zero-Trust, Envelope Encryption.
 \end{IEEEkeywords}
 
-\section{Introduction}
-Digital correspondence systems in public sectors handle critical, highly classified documents ranging from internal policy drafts to national security directives. The transition from physical paper envelopes to paperless systems (TNDE) exposes administrative workflows to severe security threats, including compromised database administrators, infrastructure interceptors, and identity spoofing.
+\section{Pendahuluan}
+Sistem persuratan dan korespondensi digital di sektor publik menangani dokumen-dokumen penting yang bersifat rahasia negara, mulai dari rancangan kebijakan internal hingga arahan keamanan nasional. Transisi dari surat fisik ke Tata Naskah Dinas Elektronik (TNDE) memunculkan berbagai celah keamanan baru, seperti kebocoran data oleh administrator database (DBA), intersepsi infrastruktur jaringan, dan pemalsuan identitas pejabat.
 
-Standard security schemes like TLS (Transport Layer Security) only encrypt data in transit, while transparent data encryption (TDE) at the database layer fails if an administrator's credentials or database backups are hijacked. Therefore, a modern government correspondence platform must enforce end-to-end (E2E) document-level security. 
+Skema keamanan standar seperti TLS (Transport Layer Security) hanya mengamankan data saat ditransmisikan, sedangkan Transparent Data Encryption (TDE) pada tingkat database gagal melindungi data jika kredensial admin database bocor. Oleh karena itu, platform korespondensi modern memerlukan perlindungan tingkat dokumen secara end-to-end (E2E).
 
-This paper introduces the implementation of a zero-trust hybrid cryptography pipeline within the \textit{SecureOffice-AI} ecosystem. We combine symmetric block ciphers with elliptic curve public-key cryptography to deliver confidentiality, integrity, authenticity, and non-repudiation.
+Paper ini membahas implementasi jalur pipa kriptografi hibrida berbasis zero-trust pada ekosistem \textit{SecureOffice-AI}. Kami menggabungkan cipher blok simetris dengan kriptografi kunci publik kurva eliptik untuk memastikan aspek kerahasiaan (*confidentiality*), integritas (*integrity*), otentisitas (*authenticity*), dan anti-penyangkalan (*non-repudiation*).
 
-\section{Cryptographic Primitives and System Design}
-Our zero-trust correspondence platform utilizes a microservice architecture separating the main business logic (Go backend) from the cryptographic operations (Go crypto-service) and privacy classification scans (FastAPI AI sanitizer). The core hybrid cryptographic elements are detailed below.
+\section{Primitif Kriptografi dan Desain Sistem}
+Platform korespondensi zero-trust kami menggunakan arsitektur mikroservice yang memisahkan logika bisnis utama (Go backend), operasi kriptografi (Go crypto-service), dan pemindaian klasifikasi dokumen oleh AI (FastAPI AI service). Elemen-elemen kriptografi hibrida tersebut dijelaskan sebagai berikut.
 
-\subsection{Symmetric Envelope Encryption: AES-256-GCM}
-For the encryption of the actual document body and PDF file attachments, we select Advanced Encryption Standard (AES) operating in Galois/Counter Mode (GCM) with a 256-bit key length. AES-GCM is an Authenticated Encryption with Associated Data (AEAD) algorithm. It provides both confidentiality and authentication.
+\subsection{Enkripsi Amplop Simetris: AES-256-GCM}
+Untuk enkripsi isi dokumen utama dan lampiran berkas PDF, kami memilih Advanced Encryption Standard (AES) dengan mode operasi Galois/Counter Mode (GCM) dan panjang kunci 256-bit. AES-GCM merupakan algoritma Authenticated Encryption with Associated Data (AEAD) yang menyediakan fitur kerahasiaan sekaligus otentikasi data.
 
-Let $P$ be the plaintext document and $DEK$ be the dynamically generated 256-bit Data Encryption Key. The encryption function is defined as:
+Misalkan $P$ adalah dokumen plaintext dan $DEK$ adalah Data Encryption Key 256-bit yang dibangkitkan secara dinamis. Fungsi enkripsi didefinisikan sebagai:
 \begin{equation}
 C, T = \text{AES-GCM-Encrypt}(DEK, Nonce, P)
 \end{equation}
-where $C$ is the ciphertext, $T$ is the 128-bit authentication tag, and $Nonce$ is a unique 96-bit initialization vector generated via a cryptographically secure random number generator (\texttt{crypto/rand}). The authentication tag $T$ is computed over the ciphertext using a polynomial evaluation over the binary Galois field $GF(2^{128})$:
+di mana $C$ menyatakan ciphertext, $T$ menyatakan tag otentikasi 128-bit, dan $Nonce$ menyatakan vektor inisialisasi 96-bit unik yang dibangkitkan secara acak melalui modul \texttt{crypto/rand}. Tag otentikasi $T$ dihitung atas ciphertext menggunakan evaluasi polinomial pada Galois Field biner $GF(2^{128})$:
 \begin{equation}
 g(x) = x^{128} + x^7 + x^2 + x + 1
 \end{equation}
-This mathematical proof guarantees that any modification of the ciphertext $C$ or nonce will cause verification to fail during decryption.
+Persamaan ini menjamin bahwa setiap perubahan pada ciphertext $C$ atau nonce akan mengakibatkan kegagalan verifikasi pada saat proses dekripsi dilakukan.
 
-\subsection{Asymmetric Key Wrapping: X25519}
-To distribute the $DEK$ securely to recipient units without exposing it to the database, we employ the X25519 Elliptic Curve Diffie-Hellman (ECDH) key wrapping protocol.
-X25519 uses the Montgomery curve:
+\subsection{Pembungkusan Kunci Asimetris: X25519}
+Untuk mendistribusikan $DEK$ secara aman kepada unit penerima tanpa mengeksposnya ke database, kami menerapkan protokol pembungkusan kunci X25519 Elliptic Curve Diffie-Hellman (ECDH).
+X25519 beroperasi pada kurva Montgomery:
 \begin{equation}
 y^2 = x^3 + 486662x^2 + x
 \end{equation}
-over the prime field defined by the pseudo-Mersenne prime $2^{255} - 19$.
-The sender wraps the $DEK$ using the recipient's public key $pub_{rec}$:
+di atas prime field yang didefinisikan oleh pseudo-Mersenne prime $2^{255} - 19$.
+Pengirim membungkus $DEK$ menggunakan kunci publik penerima $pub_{rec}$:
 \begin{equation}
 EncKey = \text{X25519-Wrap}(pub_{rec}, DEK)
 \end{equation}
-The wrapped $DEK$ ($EncKey$) is saved alongside the encrypted payload. Only the recipient holding the corresponding private key $priv_{rec}$ can decrypt the key:
+Kunci yang terbungkus ($EncKey$) disimpan bersama dengan dokumen terenkripsi. Hanya penerima yang memiliki kunci privat pasangan $priv_{rec}$ yang dapat membuka bungkus kunci tersebut:
 \begin{equation}
 DEK = \text{X25519-Unwrap}(priv_{rec}, EncKey)
 \end{equation}
 
-\subsection{Authenticity and Non-Repudiation: Ed25519}
-To guarantee that the document was signed by an authorized officer, we employ Ed25519, an Edwards-curve Digital Signature Algorithm (EdDSA). Ed25519 operates on the twisted Edwards curve:
+\subsection{Otentisitas dan Anti-Penyangkalan: Ed25519}
+Untuk menjamin dokumen ditandatangani oleh pejabat yang berwenang, kami menggunakan algoritma Ed25519 (Edwards-curve Digital Signature Algorithm). Ed25519 menggunakan kurva Edwards terpuntir:
 \begin{equation}
 -x^2 + y^2 = 1 - \frac{121665}{121666}x^2y^2
 \end{equation}
-The signing officer signs the SHA-256 checksum of the plaintext $H(P)$ using their private signing key $priv_{sig}$:
+Pejabat penandatangan menandatangani nilai hash SHA-256 dari plaintext $H(P)$ menggunakan kunci privat tanda tangan $priv_{sig}$:
 \begin{equation}
 \sigma = \text{Ed25519-Sign}(priv_{sig}, H(P))
 \end{equation}
-Verification is performed by anyone in the organization using the sender's public key $pub_{sig}$:
+Proses verifikasi dilakukan oleh penerima menggunakan kunci publik pengirim $pub_{sig}$:
 \begin{equation}
 \text{Valid} = \text{Ed25519-Verify}(pub_{sig}, H(P), \sigma)
 \end{equation}
 
-\section{System Implementation and Workflow}
-The SecureOffice-AI hybrid cryptographic pipeline follows a strict Zero-Trust flow:
+\section{Implementasi Sistem dan Alur Kerja}
+Alur kerja kriptografi hibrida zero-trust pada platform SecureOffice-AI mengikuti tahapan berikut:
 
 \begin{enumerate}
-    \item \textbf{Key Generation}: Every work unit generates an X25519 key pair for key wrapping and an Ed25519 key pair for digital signing. Private keys are encrypted using a local PBKDF2 derivative of the officer's 6-digit security PIN.
-    \item \textbf{Document Submission}: The sender uploads the PDF letter, generating a dynamic AES-256 DEK. The PDF is encrypted with AES-GCM, the DEK is wrapped with the recipient's X25519 public key, and the signature is signed with the sender's Ed25519 private key.
-    \item \textbf{Verification}: Upon receipt, the recipient inputs their PIN to unlock their X25519 private key, decrypts the DEK, decrypts the PDF, and verifies the Ed25519 signature.
+    \item \textbf{Pembangkitan Kunci}: Setiap unit kerja membangkitkan pasangan kunci X25519 untuk pembungkusan kunci dan Ed25519 untuk tanda tangan digital. Kunci privat dilindungi dengan enkripsi PBKDF2 menggunakan PIN keamanan 6-digit milik pejabat terkait.
+    \item \textbf{Pengiriman Dokumen}: Pengirim mengunggah dokumen/PDF, sistem membangkitkan DEK simetris baru secara acak, mengenkripsi dokumen dengan AES-GCM, membungkus DEK dengan kunci publik X25519 penerima, dan membubuhkan tanda tangan Ed25519 pengirim.
+    \item \textbf{Verifikasi Penerimaan}: Penerima memasukkan PIN/TOTP untuk membuka kunci privat X25519 mereka, mendekripsi DEK, mendekripsi dokumen PDF, dan melakukan verifikasi validitas tanda tangan Ed25519 pengirim.
 \end{enumerate}
 
-\section{Threat Model and Security Analysis}
-In this section, we define the threat model for public sector digital correspondence and analyze how the hybrid cryptographic system mitigates these risks.
+\section{Model Ancaman dan Analisis Keamanan}
+Bagian ini mendefinisikan model ancaman pada persuratan sektor publik serta menganalisis efektivitas sistem kriptografi hibrida dalam memitigasi risiko tersebut.
 
-\subsection{Threat Model Definition}
-We assume an active adversary model (Dolev-Yao model) where the attacker has full control over the database management system (DBMS) and the server infrastructure. The threat vectors include:
+\subsection{Definisi Model Ancaman}
+Kami menggunakan asumsi model penyerang aktif (*Active Adversary / Dolev-Yao model*) di mana penyerang diasumsikan memiliki kontrol penuh atas infrastruktur server dan DBMS. Vektor ancaman meliputi:
 \begin{itemize}
-    \item \textbf{Malicious Database Administrator (DBA)}: An insider with complete read/write access to the database tables containing the correspondence logs.
-    \item \textbf{Man-in-the-Middle (MitM) Attacks}: Attackers intercepting packets between microservices or API routers.
-    \item \textbf{Identity Spoofing}: Attackers attempting to send forged decisions or decrees pretending to be a high-ranking officer.
+    \item \textbf{Administrator Database Jahat (DBA)}: Pihak internal yang memiliki akses penuh untuk membaca dan memodifikasi tabel database persuratan.
+    \item \textbf{Serangan Intersepsi (MitM)}: Penyerang menyadap paket data yang dikirimkan antar mikroservice.
+    \item \textbf{Pemalsuan Identitas (Spoofing)}: Upaya pihak luar mengirimkan surat keputusan palsu atas nama pimpinan unit kerja.
 \end{itemize}
 
-\subsection{Cryptographic Mitigation Analysis}
-Table~\ref{tab:threats} summarizes the security threats and the corresponding cryptographic controls implemented in SecureOffice-AI.
+\subsection{Analisis Mitigasi Kriptografi}
+Tabel~\ref{tab:threats} menunjukkan matriks mitigasi terhadap berbagai vektor ancaman keamanan.
 
 \begin{table}[htbp]
-\caption{Threat Mitigation Matrix}
+\caption{Matriks Mitigasi Ancaman Keamanan}
 \begin{center}
 \begin{tabular}{llp{3.5cm}}
 \toprule
-\textbf{Threat Vector} & \textbf{Impact} & \textbf{Cryptographic Mitigation} \\
+\textbf{Vektor Ancaman} & \textbf{Dampak} & \textbf{Mitigasi Kriptografi} \\
 \midrule
-Compromised DBA & Data Leakage & AES-256-GCM payload encryption; DEK is only stored in X25519 wrapped form. \\
+Kebocoran DBA & Kebocoran Dokumen & Enkripsi isi dokumen dengan AES-256-GCM; DEK disimpan hanya dalam bentuk terbungkus X25519. \\
 \midrule
-Database Tampering & Data Corruption & AES-GCM 128-bit authentication tag validation fails. \\
+Manipulasi Database & Kerusakan Data & Validasi tag otentikasi 128-bit AES-GCM gagal saat dekripsi. \\
 \midrule
-Identity Spoofing & Forged Letters & Ed25519 digital signature fails validation on recipient end. \\
+Pemalsuan Identitas & Surat Palsu & Verifikasi tanda tangan digital Ed25519 gagal di sisi penerima. \\
 \midrule
-Replay Attacks & Duplicated Action & Hash-chained SHA-256 audit trail logs timestamps. \\
+Serangan Replay & Pengulangan Transaksi & Log audit rantai hash SHA-256 melacak timestamp secara urut. \\
 \bottomrule
 \end{tabular}
 \label{tab:threats}
 \end{center}
 \end{table}
 
-By wrapping the Data Encryption Key (DEK) with X25519 public keys, the database only stores encrypted payloads and wrapped keys. Since the database admin does not possess the private key of any unit head, E2E confidentiality is maintained even under a full database breach.
+Dengan membungkus DEK simetris menggunakan kunci publik X25519 penerima, database hanya menyimpan payload terenkripsi dan kunci terbungkus. Karena administrator database tidak memiliki kunci privat penerima, kerahasiaan dokumen tetap terjaga utuh meskipun database bocor sepenuhnya.
 
-\section{Evaluation and Experimental Results}
-To evaluate the performance of our Go-based hybrid cryptography implementation, we conducted a series of benchmark tests on varying document payload sizes (representing typical letters and larger scanned PDF attachments).
+\section{Evaluasi dan Hasil Eksperimen}
+Kami melakukan serangkaian pengujian benchmark terhadap layanan kriptografi berbasis Go untuk mengukur kecepatan pemrosesan enkripsi amplop pada berbagai ukuran berkas dokumen.
 
-\subsection{Experimental Setup}
-The tests were executed on an AMD Ryzen 7 5800U CPU (1.90 GHz) with 16 GB of RAM, running Windows 11. The Go crypto-service microservice was tested using native benchmarks.
+\subsection{Pengaturan Eksperimen}
+Pengujian dijalankan pada CPU AMD Ryzen 7 5800U (1.90 GHz) dengan RAM 16 GB di lingkungan Windows 11. Layanan mikro Go crypto-service diuji dengan metode benchmark bawaan bahasa Go.
 
-\subsection{Performance Benchmarks}
-Table~\ref{tab:benchmarks} outlines the computational execution times for the symmetric payload encryption (AES-256-GCM), asymmetric key wrapping (X25519), and digital signature signing (Ed25519).
+\subsection{Hasil Benchmark Performa}
+Tabel~\ref{tab:benchmarks} merinci waktu eksekusi enkripsi simetris (AES-256-GCM), pembungkusan kunci (X25519), dan pembuatan tanda tangan digital (Ed25519).
 
 \begin{table}[htbp]
-\caption{Cryptographic Execution Speeds on SecureOffice-AI}
+\caption{Waktu Eksekusi Kriptografi pada SecureOffice-AI}
 \begin{center}
 \begin{tabular}{ccccc}
 \toprule
-\textbf{File Size} & \textbf{AES-GCM (ms)} & \textbf{X25519 (ms)} & \textbf{Ed25519 (ms)} & \textbf{Total (ms)} \\
+\textbf{Ukuran Berkas} & \textbf{AES-GCM (ms)} & \textbf{X25519 (ms)} & \textbf{Ed25519 (ms)} & \textbf{Total (ms)} \\
 \midrule
-100 KB  & 0.08 & 1.12 & 0.45 & 1.65 \\
-1 MB    & 0.35 & 1.12 & 0.45 & 1.92 \\
-5 MB    & 1.22 & 1.12 & 0.45 & 2.79 \\
-10 MB   & 2.45 & 1.12 & 0.45 & 4.02 \\
-50 MB   & 11.89 & 1.12 & 0.45 & 13.46 \\
+100 KB  & 0,08 & 1,12 & 0,45 & 1,65 \\
+1 MB    & 0,35 & 1,12 & 0,45 & 1,92 \\
+5 MB    & 1,22 & 1,12 & 0,45 & 2,79 \\
+10 MB   & 2,45 & 1,12 & 0,45 & 4,02 \\
+50 MB   & 11,89 & 1.12 & 0.45 & 13.46 \\
 \bottomrule
 \end{tabular}
 \label{tab:benchmarks}
 \end{center}
 \end{table}
 
-The results show that the asymmetric operations (X25519 and Ed25519) remain constant regardless of payload size (approx. 1.12 ms and 0.45 ms respectively), as they only process the 256-bit DEK and the 256-bit SHA-256 hash. The symmetric encryption time scales linearly, taking only 2.45 ms to encrypt a 10 MB PDF file. The entire hybrid encryption pipeline takes less than 5 ms for a 10 MB document.
+Hasil pengujian menunjukkan bahwa operasi asimetris (X25519 dan Ed25519) membutuhkan waktu yang konstan (masing-masing $\approx$ 1,12 ms dan 0,45 ms) karena hanya memproses data berukuran kecil (kunci DEK dan hash SHA-256). Sebaliknya, waktu enkripsi simetris (AES-GCM) meningkat linier sesuai ukuran berkas. Total waktu enkripsi amplop untuk berkas PDF 10 MB membutuhkan waktu hanya 4,02 ms, membuktikan kesiapan platform untuk menangani dokumen bervolume besar secara real-time.
 
-\subsection{Comparative Analysis}
-Compared to legacy RSA-4096 signature and key encapsulation schemes, the X25519 and Ed25519 pipeline exhibits a reduction of over 85\% in computational overhead and consumes 70\% less memory, making it highly optimal for mobile device accesses.
+\subsection{Analisis Perbandingan}
+Dibandingkan dengan skema tanda tangan digital dan enkripsi kunci asimetris warisan seperti RSA-4096, penggunaan kombinasi X25519 dan Ed25519 pada platform ini memangkas beban komputasi hingga lebih dari 85\% dan mengurangi konsumsi memori hingga 70\%, yang sangat optimal bagi perangkat mobile.
 
-\subsection{Tamper-Resistance Test}
-To verify the integrity layer, we simulated an active database modification attack where an intruder modifies the binary content of the encrypted PDF stored in the datastore.
-Our E2E tests verified that the Ed25519 signature verification immediately failed, generating the authentication error:
+\subsection{Uji Ketahanan Manipulasi}
+Untuk memverifikasi lapisan integritas data, kami mensimulasikan serangan modifikasi database aktif dengan mengubah representasi biner dari berkas PDF terenkripsi. Pengujian membuktikan proses dekripsi langsung digagalkan dengan menampilkan pesan error otentikasi:
 \begin{quote}
 \texttt{decryption authentication failed (tampered data or wrong key)}
 \end{quote}
-This proves that the AES-GCM authentication tag and Ed25519 signature prevent unauthorized data manipulation.
+Hal ini memvalidasi bahwa tag otentikasi AES-GCM mencegah manipulasi isi surat oleh pihak luar.
 
-\section{Conclusion}
-This paper presented the implementation of a zero-trust hybrid cryptography architecture utilizing AES-256-GCM, X25519, and Ed25519 for secure digital correspondence. By separating symmetric document encryption from asymmetric key wrapping, the platform secures classified communications while maintaining sub-5 ms E2E processing overhead for standard 10 MB files. Future works will investigate kyber-based Post-Quantum Cryptography integrations to secure documents against quantum decryption risks.
+\section{Kesimpulan}
+Penelitian ini telah berhasil mengimplementasikan arsitektur kriptografi hibrida zero-trust berbasis AES-256-GCM, X25519, dan Ed25519 pada platform persuratan digital SecureOffice-AI. Dengan memisahkan enkripsi isi surat simetris dan pembungkusan kunci asimetris, platform mampu mengamankan korespondensi rahasia dengan overhead pemrosesan yang sangat rendah (kurang dari 5 ms untuk file 10 MB). Penelitian selanjutnya akan difokuskan pada integrasi Kriptografi Pasca-Quantum (*Post-Quantum Cryptography*) berbasis Kyber guna mengantisipasi ancaman dekripsi di masa depan oleh komputer kuantum.
 
 \begin{thebibliography}{00}
 \bibitem{b1} W. Diffie and M. Hellman, ``New directions in cryptography,'' \emph{IEEE Transactions on Information Theory}, vol. 22, no. 6, pp. 644--654, 1976.
