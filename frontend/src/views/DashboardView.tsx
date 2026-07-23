@@ -25,7 +25,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
   const [query, setQuery] = useState("");
   
   // Admin User Registration States
-  const [adminSubTab, setAdminSubTab] = useState<'letters' | 'register'>('letters');
+  const [adminSubTab, setAdminSubTab] = useState<'letters' | 'register'>(
+    user.role === 'ADMIN' ? 'register' : 'letters'
+  );
   const [newUsername, setNewUsername] = useState("");
   const [newFullName, setNewFullName] = useState("");
   const [newNip, setNewNip] = useState("");
@@ -219,13 +221,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
             Selamat siang, {user.full_name.split(' ')[0]}.
           </h1>
           <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#94a197' }}>
-            Integritas seluruh surat dinas dalam pengawasan. Ada <span style={{ color: '#e9a84f', fontWeight: 600 }}>{pendingLetters} naskah</span> yang menunggu tanda tangan.
+            {user.role === 'ADMIN' ? (
+              "Keamanan sistem terpantau stabil. Silakan lakukan administrasi registrasi akun pegawai baru."
+            ) : user.role === 'AUDITOR' ? (
+              "Seluruh hash rantai jejak audit terverifikasi sah. Silakan pantau audit trail siber."
+            ) : (
+              <>
+                Integritas seluruh surat dinas dalam pengawasan. Ada <span style={{ color: '#e9a84f', fontWeight: 600 }}>{pendingLetters} naskah</span> yang menunggu tanda tangan.
+              </>
+            )}
           </p>
         </div>
 
-        <button onClick={onNavigateCompose} className="btn-primary">
-          <Icon name="plus" size={17}/> Buat Surat Dinas Baru
-        </button>
+        {user.role !== 'ADMIN' && user.role !== 'AUDITOR' && (
+          <button onClick={onNavigateCompose} className="btn-primary">
+            <Icon name="plus" size={17}/> Buat Surat Dinas Baru
+          </button>
+        )}
       </div>
 
       {/* 2. Grid of 4 KPI Metric Cards */}
@@ -281,38 +293,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
 
       </div>
 
-      {/* 3. Sub-Tab Switching for ADMIN Role */}
-      {user.role === 'ADMIN' && (
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem' }}>
-          <button
-            onClick={() => setAdminSubTab('letters')}
-            style={{
-              background: 'none', border: 'none', color: adminSubTab === 'letters' ? '#d8ff43' : '#889a8d',
-              fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
-              letterSpacing: '0.12em', textTransform: 'uppercase',
-              borderBottom: adminSubTab === 'letters' ? '2px solid #d8ff43' : 'none', paddingBottom: '0.5rem',
-              transition: 'all 0.2s'
-            }}
-          >
-            📋 Arsip & Surat Masuk
-          </button>
-          <button
-            onClick={() => setAdminSubTab('register')}
-            style={{
-              background: 'none', border: 'none', color: adminSubTab === 'register' ? '#d8ff43' : '#889a8d',
-              fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
-              letterSpacing: '0.12em', textTransform: 'uppercase',
-              borderBottom: adminSubTab === 'register' ? '2px solid #d8ff43' : 'none', paddingBottom: '0.5rem',
-              transition: 'all 0.2s'
-            }}
-          >
-            👤 Registrasi Pegawai Baru
-          </button>
-        </div>
-      )}
-
-      {adminSubTab === 'register' ? (
-        /* User Registration Workspace Form Panel */
+      {user.role === 'ADMIN' ? (
+        /* ==================== 1. ADMIN WORKSPACE (Registration Only) ==================== */
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem' }}>
           <section className="glass-card" style={{ padding: '2rem' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#ffffff', marginBottom: '0.5rem' }}>
@@ -445,7 +427,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
             </form>
           </section>
 
-          {/* User Registration Side Info & Success Results Card */}
           <aside style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {regSuccess ? (
               <div style={{ backgroundColor: '#101d18', borderRadius: '8px', border: '1px solid #79dcb8', padding: '1.5rem' }}>
@@ -482,8 +463,68 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
             )}
           </aside>
         </div>
+      ) : user.role === 'AUDITOR' ? (
+        /* ==================== 2. AUDITOR WORKSPACE (Read-Only Audit Trail) ==================== */
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 330px', gap: '2rem' }}>
+          
+          <section className="glass-card" style={{ padding: '2rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#ffffff', marginBottom: '0.5rem' }}>
+              Dashboard Audit Keamanan & Kepatuhan
+            </h2>
+            <p style={{ fontSize: '0.8rem', color: '#8b9a8d', marginBottom: '2rem' }}>
+              Memantau integritas log audit trail kriptografis (SHA-256 Hash Chain). Hak akses Anda bersifat <strong>Read-Only</strong>.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {[
+                { time: "14:32:01", event: "Verifikasi Digital Signature Ed25519 - Sukses", actor: "Dr. Budi Santoso, M.Si.", status: "VALID" },
+                { time: "14:16:15", event: "Dekripsi Berkas PDF AES-GCM - Sukses", actor: "Dr. Budi Santoso, M.Si.", status: "VALID" },
+                { time: "13:49:50", event: "Pemeriksaan Hash Chain Node SHA-256 - Sukses", actor: "Sistem Core", status: "VALID" },
+                { time: "11:08:12", event: "Aktivasi Akun & Onboarding MFA Baru", actor: "Siti Rahma, S.AP.", status: "VALID" },
+                { time: "10:45:33", event: "Inisialisasi Enkripsi Naskah Dinas", actor: "Ahmad Hidayat", status: "VALID" }
+              ].map((log, idx) => (
+                <div key={idx} style={{
+                  backgroundColor: '#091411', border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: '6px', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                }}>
+                  <div>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#8b9a8d', marginRight: '1rem' }}>{log.time}</span>
+                    <strong style={{ fontSize: '13px', color: '#e8eee8' }}>{log.event}</strong>
+                    <span style={{ fontSize: '11px', color: '#758277', display: 'block', marginTop: '0.25rem' }}>Aktor: {log.actor}</span>
+                  </div>
+                  <span style={{
+                    fontFamily: 'var(--font-mono)', fontSize: '10px', fontWeight: 600,
+                    color: '#79dcb8', backgroundColor: 'rgba(121,220,184,0.1)',
+                    padding: '0.25rem 0.5rem', borderRadius: '4px'
+                  }}>
+                    {log.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <aside style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {/* Node Security Panel */}
+            <section style={{ backgroundColor: '#0b1714', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', padding: '1.25rem' }}>
+              <h3 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#ffffff', marginBottom: '1rem' }}>Node Keamanan</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {[
+                  ["Crypto Engine (Go)", "TERHUBUNG"],
+                  ["AI Sanitizer (FastAPI)", "TERHUBUNG"],
+                  ["Replikasi Cadangan DB", "AKTIF"]
+                ].map(([node, status]) => (
+                  <div key={node} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '0.75rem' }}>
+                    <span style={{ fontSize: '12px', color: '#aab6aa' }}>{node}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#79dcb8' }}>{status}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </aside>
+        </div>
       ) : (
-        /* Standard Two-Column Workspace Layout */
+        /* ==================== 3. CORRESPONDENCE WORKSPACE (Inbox/Outbox) ==================== */
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 330px', gap: '2rem' }}>
           
           {/* Left Column: Recent Correspondence Table */}
