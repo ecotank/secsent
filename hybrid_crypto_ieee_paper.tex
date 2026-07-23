@@ -87,6 +87,30 @@ Proses verifikasi dilakukan oleh penerima menggunakan kunci publik pengirim $pub
 \text{Valid} = \text{Ed25519-Verify}(pub_{sig}, H(P), \sigma)
 \end{equation}
 
+\section{Kepatuhan Standar Kriptografi Internasional dan Nasional}
+Untuk memastikan tingkat kepercayaan, keandalan, dan kepatuhan hukum yang tinggi bagi instansi pemerintah dan publik, arsitektur kriptografi hibrida pada platform SecureOffice-AI dirancang dengan merujuk pada standar-standar keamanan siber formal:
+
+\subsection{Standar FIPS dan NIST (Simetris)}
+Primitif enkripsi simetris AES-256-GCM yang digunakan mengadopsi standar internasional resmi sebagai berikut:
+\begin{itemize}
+    \item \textbf{FIPS PUB 197}: Algoritma AES dengan panjang kunci 256-bit diakui sebagai standar enkripsi resmi oleh pemerintah federal Amerika Serikat untuk perlindungan informasi berklasifikasi tinggi (\textit{top-secret}).
+    \item \textbf{NIST SP 800-38D}: Publikasi Khusus dari NIST yang merekomendasikan mode operasi Galois/Counter Mode (GCM) karena menyediakan fungsionalitas AEAD (\textit{Authenticated Encryption with Associated Data}) yang efisien dan aman.
+\end{itemize}
+
+\subsection{Standar IETF (Asimetris \& Tanda Tangan)}
+Manajemen kunci kurva eliptik dan pembubuhan tanda tangan elektronik mematuhi spesifikasi standar Internet Engineering Task Force (IETF):
+\begin{itemize}
+    \item \textbf{RFC 7748 (X25519)}: Mengatur penggunaan Curve25519 untuk skema pertukaran kunci Diffie-Hellman (ECDH) berkecepatan tinggi yang aman dari serangan analisis waktu (\textit{timing attack}) dan \textit{side-channel analysis}.
+    \item \textbf{RFC 8032 (Ed25519)}: Mendefinisikan implementasi Edwards-curve Digital Signature Algorithm (EdDSA) untuk tanda tangan digital berkinerja tinggi dengan resistensi tinggi terhadap kebocoran informasi.
+\end{itemize}
+
+\subsection{Kepatuhan Regulasi Nasional (BSSN)}
+Di Indonesia, Badan Siber dan Sandi Negara (BSSN) melalui Pedoman Penggunaan Algoritma Kriptografi Instansi Pemerintah merekomendasikan tingkat kekuatan keamanan minimum:
+\begin{itemize}
+    \item Kunci simetris minimal AES-128 (SecureOffice-AI melampaui standar dengan menerapkan AES-256).
+    \item Kriptografi kunci publik berbasis kurva eliptik (ECC) Curve25519 memiliki panjang kunci 256-bit yang setara dengan kekuatan kunci RSA 3072-bit hingga 4096-bit, memenuhi spesifikasi pengamanan naskah dinas klasifikasi Rahasia dan Sangat Rahasia.
+\end{itemize}
+
 \section{Implementasi Sistem dan Alur Kerja}
 Alur kerja kriptografi hibrida zero-trust pada platform SecureOffice-AI mengikuti tahapan berikut:
 
