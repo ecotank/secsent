@@ -23,6 +23,88 @@ interface DashboardViewProps {
 export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLetter, onNavigateCompose }) => {
   const [letters, setLetters] = useState<any[]>([]);
   const [query, setQuery] = useState("");
+  
+  // Admin User Registration States
+  const [adminSubTab, setAdminSubTab] = useState<'letters' | 'register'>('letters');
+  const [newUsername, setNewUsername] = useState("");
+  const [newFullName, setNewFullName] = useState("");
+  const [newNip, setNewNip] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newRole, setNewRole] = useState("STAFF");
+  const [newClearance, setNewClearance] = useState("CONFIDENTIAL");
+  const [regError, setRegError] = useState("");
+  const [regSuccess, setRegSuccess] = useState<any | null>(null);
+
+  // Generates a random secure 16-character Base32 string
+  const generateRandomBase32 = (): string => {
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    let result = "";
+    for (let i = 0; i < 16; i++) {
+      result += alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+    }
+    return result;
+  };
+
+  const handleRegisterUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegError("");
+    setRegSuccess(null);
+
+    if (!newUsername || !newFullName || !newNip || !newEmail || !newPassword) {
+      setRegError("Semua kolom input wajib diisi.");
+      return;
+    }
+
+    const cleanUsername = newUsername.trim().toLowerCase();
+    
+    // Check if user already exists in dynamic database
+    const localUsersJson = localStorage.getItem("local_registered_users");
+    const localUsers = localUsersJson ? JSON.parse(localUsersJson) : [];
+    
+    const exists = localUsers.some((u: any) => u.username === cleanUsername) || 
+                   ["ka.unit.sec", "admin.sys", "sekretaris.sec", "staf.sec", "auditor.sys"].includes(cleanUsername);
+    if (exists) {
+      setRegError("Username telah terdaftar di sistem.");
+      return;
+    }
+
+    // Generate unique Base32 Secret Key for this new employee
+    const userSecret = generateRandomBase32();
+
+    // Save to local user secrets map
+    const localSecretsJson = localStorage.getItem("local_user_mfa_secrets");
+    const localSecrets = localSecretsJson ? JSON.parse(localSecretsJson) : {};
+    localSecrets[cleanUsername] = userSecret;
+    localStorage.setItem("local_user_mfa_secrets", JSON.stringify(localSecrets));
+
+    // Save user profile object to local database
+    const newEmployee = {
+      id: "usr-" + Math.random().toString(36).substring(2, 11),
+      username: cleanUsername,
+      full_name: newFullName.trim(),
+      nip_nik: newNip.trim(),
+      email: newEmail.trim(),
+      role: newRole,
+      clearance_level: newClearance
+    };
+    localUsers.push(newEmployee);
+    localStorage.setItem("local_registered_users", JSON.stringify(localUsers));
+
+    // Display registration success details
+    setRegSuccess({
+      ...newEmployee,
+      secret: userSecret,
+      otpauthURI: `otpauth://totp/SecureOffice-AI:${cleanUsername}?secret=${userSecret}&issuer=SecureOffice-AI`
+    });
+
+    // Clear form fields
+    setNewUsername("");
+    setNewFullName("");
+    setNewNip("");
+    setNewEmail("");
+    setNewPassword("");
+  };
 
   const mockLetters = [
     {
@@ -199,142 +281,350 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
 
       </div>
 
-      {/* 3. Two-Column Workspace Layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 330px', gap: '2rem' }}>
-        
-        {/* Left Column: Recent Correspondence Table */}
-        <section style={{ backgroundColor: '#0b1714', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-          
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-            <div>
-              <h2 style={{ fontSize: '1rem', fontWeight: 600, color: '#ffffff' }}>Naskah dinas terbaru</h2>
-              <p style={{ fontSize: '0.75rem', color: '#87958a', marginTop: '0.25rem' }}>Register pergerakan dokumen dinas terakhir</p>
-            </div>
-            <label style={{
-              display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#07100f',
-              border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '0.4rem 0.75rem', color: '#829185'
-            }}>
-              <Icon name="search" size={15}/>
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Cari nomor atau perihal"
-                style={{ width: '140px', background: 'transparent', border: 'none', color: '#ffffff', fontSize: '12px', outline: 'none' }}
-              />
-            </label>
-          </div>
+      {/* 3. Sub-Tab Switching for ADMIN Role */}
+      {user.role === 'ADMIN' && (
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem' }}>
+          <button
+            onClick={() => setAdminSubTab('letters')}
+            style={{
+              background: 'none', border: 'none', color: adminSubTab === 'letters' ? '#d8ff43' : '#889a8d',
+              fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+              borderBottom: adminSubTab === 'letters' ? '2px solid #d8ff43' : 'none', paddingBottom: '0.5rem',
+              transition: 'all 0.2s'
+            }}
+          >
+            📋 Arsip & Surat Masuk
+          </button>
+          <button
+            onClick={() => setAdminSubTab('register')}
+            style={{
+              background: 'none', border: 'none', color: adminSubTab === 'register' ? '#d8ff43' : '#889a8d',
+              fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+              borderBottom: adminSubTab === 'register' ? '2px solid #d8ff43' : 'none', paddingBottom: '0.5rem',
+              transition: 'all 0.2s'
+            }}
+          >
+            👤 Registrasi Pegawai Baru
+          </button>
+        </div>
+      )}
 
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-              <thead style={{ backgroundColor: '#091411', fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#758277' }}>
-                <tr>
-                  <th style={{ padding: '0.75rem 1.25rem', fontWeight: 400 }}>Nomor Naskah</th>
-                  <th style={{ padding: '0.75rem 0.75rem', fontWeight: 400 }}>Perihal / Unit Kerja</th>
-                  <th style={{ padding: '0.75rem 0.75rem', fontWeight: 400 }}>Klasifikasi</th>
-                  <th style={{ padding: '0.75rem 0.75rem', fontWeight: 400 }}>Aktivitas</th>
-                  <th style={{ padding: '0.75rem 1.25rem' }}/>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((letter) => (
-                  <tr key={letter.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', transition: 'background 0.2s' }}>
-                    <td style={{ padding: '1rem 1.25rem', fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#d8ff43' }}>
-                      {letter.number}
-                    </td>
-                    <td style={{ padding: '1rem 0.75rem' }}>
-                      <p style={{ fontSize: '0.875rem', fontWeight: 500, color: '#e4eae4' }}>{letter.subject}</p>
-                      <p style={{ fontSize: '11px', color: '#849287', marginTop: '0.25rem' }}>Dari: {letter.sender}</p>
-                    </td>
-                    <td style={{ padding: '1rem 0.75rem' }}>
-                      <span className={`badge ${
-                        letter.classification === 'RAHASIA' ? 'badge-secret' :
-                        letter.classification === 'TERBATAS' ? 'badge-confidential' : 'badge-restricted'
-                      }`}>
-                        {letter.classification}
-                      </span>
-                    </td>
-                    <td style={{ padding: '1rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#87958a' }}>
-                      {letter.date}
-                    </td>
-                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
-                      <button
-                        onClick={() => onSelectLetter(letter.letterId)}
-                        className="btn-secondary"
-                        style={{ padding: '0.35rem 0.75rem', fontSize: '12px' }}
-                      >
-                        Buka <Icon name="arrow" size={14}/>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-        </section>
-
-        {/* Right Column: Node Security & Timeline Logs */}
-        <aside style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-          
-          {/* Node Security Panel */}
-          <section style={{ backgroundColor: '#0b1714', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', padding: '1.25rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
-              <div>
-                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#89978c' }}>
-                  Keamanan Ekosistem
-                </p>
-                <h2 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#ffffff', marginTop: '0.25rem' }}>Node Utama Aman</h2>
-              </div>
-              <div style={{
-                display: 'grid', placeItems: 'center', width: '36px', height: '36px',
-                borderRadius: '50%', border: '1px solid rgba(216,255,67,0.3)', color: '#d8ff43'
-              }}>
-                <Icon name="check" size={17}/>
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {[
-                ["Crypto Engine (Go)", "TERHUBUNG"],
-                ["AI Sanitizer (FastAPI)", "TERHUBUNG"],
-                ["Replikasi Cadangan DB", "AKTIF"]
-              ].map(([node, status]) => (
-                <div key={node} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '0.75rem' }}>
-                  <span style={{ fontSize: '12px', color: '#aab6aa' }}>{node}</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#79dcb8' }}>{status}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Jejak Audit Terakhir Panel */}
-          <section style={{ backgroundColor: '#101d18', borderRadius: '8px', border: '1px solid rgba(216,255,67,0.2)', padding: '1.25rem' }}>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#d8ff43' }}>
-              Jejak Audit Terakhir
+      {adminSubTab === 'register' ? (
+        /* User Registration Workspace Form Panel */
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2rem' }}>
+          <section className="glass-card" style={{ padding: '2rem' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#ffffff', marginBottom: '0.5rem' }}>
+              Registrasi Pegawai Baru
+            </h2>
+            <p style={{ fontSize: '0.8rem', color: '#8b9a8d', marginBottom: '2rem' }}>
+              Daftarkan pejabat/staf baru untuk memberikan akses kunci kriptografi sektoral asimetris.
             </p>
-            <div style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '1rem' }}>
-              {[
-                ["14:32", "Digital Signature Ed25519 diverifikasi", "Budi Santoso"],
-                ["14:16", "Naskah dinas RAHASIA didekripsi", "Budi Santoso"],
-                ["13:49", "Audit Chain SHA-256 diverifikasi", "Sistem Core"]
-              ].map(([time, desc, actor]) => (
-                <div key={time} style={{ position: 'relative' }}>
-                  <span style={{
-                    position: 'absolute', left: '-21px', top: '4px', width: '8px', height: '8px',
-                    borderRadius: '50%', border: '2px solid #101d18', backgroundColor: '#d8ff43'
-                  }}/>
-                  <p style={{ fontSize: '12px', lineHeight: '1.4', color: '#d6ddd6' }}>{desc}</p>
-                  <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#758277', marginTop: '0.25rem' }}>{time} · {actor}</p>
-                </div>
-              ))}
-            </div>
-            <button style={{ marginTop: '1.25rem', background: 'none', border: 'none', color: '#d8ff43', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
-              Buka Audit Trail Lengkap →
-            </button>
+
+            {regError && (
+              <div style={{
+                backgroundColor: 'rgba(255,107,107,0.1)', border: '1px solid #ff6b6b',
+                borderRadius: '8px', padding: '0.75rem 1rem', color: '#ff8585', fontSize: '0.8rem', marginBottom: '1.5rem'
+              }}>
+                <span>⚠ {regError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleRegisterUser} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+              
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: '#8b9a8d', marginBottom: '0.5rem' }}>
+                  Username Baru
+                </label>
+                <input
+                  type="text"
+                  className="input-control"
+                  value={newUsername}
+                  onChange={(e) => setNewUsername(e.target.value)}
+                  placeholder="Contoh: staf.sec"
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: '#8b9a8d', marginBottom: '0.5rem' }}>
+                  Nama Lengkap & Gelar
+                </label>
+                <input
+                  type="text"
+                  className="input-control"
+                  value={newFullName}
+                  onChange={(e) => setNewFullName(e.target.value)}
+                  placeholder="Contoh: Ahmad Hidayat, S.Kom."
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: '#8b9a8d', marginBottom: '0.5rem' }}>
+                  NIP / NIK Resmi
+                </label>
+                <input
+                  type="text"
+                  className="input-control"
+                  value={newNip}
+                  onChange={(e) => setNewNip(e.target.value)}
+                  placeholder="Contoh: NIP-19951112-004"
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: '#8b9a8d', marginBottom: '0.5rem' }}>
+                  Email Dinas
+                </label>
+                <input
+                  type="email"
+                  className="input-control"
+                  value={newEmail}
+                  onChange={(e) => setNewEmail(e.target.value)}
+                  placeholder="Contoh: staf@secureoffice.internal"
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: '#8b9a8d', marginBottom: '0.5rem' }}>
+                  Kata Sandi (Password)
+                </label>
+                <input
+                  type="password"
+                  className="input-control"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Minimal 8 karakter..."
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: '#8b9a8d', marginBottom: '0.5rem' }}>
+                  Hak Akses (Role)
+                </label>
+                <select
+                  value={newRole}
+                  onChange={(e) => setNewRole(e.target.value)}
+                  className="input-control"
+                  style={{ backgroundColor: '#07100f' }}
+                >
+                  <option value="HEAD_OF_UNIT">HEAD_OF_UNIT (Kepala Unit)</option>
+                  <option value="SECRETARY">SECRETARY (Sekretaris)</option>
+                  <option value="STAFF">STAFF (Staf Pelaksana)</option>
+                  <option value="ADMIN">ADMIN (System Administrator)</option>
+                  <option value="AUDITOR">AUDITOR (Auditor Internal)</option>
+                </select>
+              </div>
+
+              <div style={{ gridColumn: 'span 2' }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', color: '#8b9a8d', marginBottom: '0.5rem' }}>
+                  Clearance Level (Tingkat Klasifikasi Naskah)
+                </label>
+                <select
+                  value={newClearance}
+                  onChange={(e) => setNewClearance(e.target.value)}
+                  className="input-control"
+                  style={{ backgroundColor: '#07100f' }}
+                >
+                  <option value="UNCLASSIFIED">UNCLASSIFIED (Biasa / Terbuka)</option>
+                  <option value="RESTRICTED">RESTRICTED (Terbatas)</option>
+                  <option value="CONFIDENTIAL">CONFIDENTIAL (Rahasia)</option>
+                  <option value="SECRET">SECRET (Sangat Rahasia)</option>
+                </select>
+              </div>
+
+              <button type="submit" className="btn-primary" style={{ gridColumn: 'span 2', marginTop: '1rem' }}>
+                👤 Daftarkan Pegawai Baru
+              </button>
+
+            </form>
           </section>
 
-        </aside>
+          {/* User Registration Side Info & Success Results Card */}
+          <aside style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {regSuccess ? (
+              <div style={{ backgroundColor: '#101d18', borderRadius: '8px', border: '1px solid #79dcb8', padding: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: '#79dcb8' }}>
+                  <span style={{ fontSize: '1.2rem' }}>🎉</span>
+                  <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>AKUN BERHASIL TERDAFTAR!</span>
+                </div>
+                
+                <div style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', color: '#e8eee8' }}>
+                  <p>Nama: <strong>{regSuccess.full_name}</strong></p>
+                  <p>Username: <code>{regSuccess.username}</code></p>
+                  <p>PIN Default: <code>123456</code></p>
+                  
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.75rem', marginTop: '0.5rem' }}>
+                    <span style={{ fontSize: '10px', color: '#8b9a8d', display: 'block', marginBottom: '0.25rem' }}>Kunci Base32 OTPKEY:</span>
+                    <code style={{ fontSize: '0.75rem', color: '#d8ff43', wordBreak: 'break-all' }}>{regSuccess.secret}</code>
+                  </div>
 
-      </div>
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '0.75rem' }}>
+                    <span style={{ fontSize: '10px', color: '#8b9a8d', display: 'block', marginBottom: '0.25rem' }}>Tautan URI Authenticator:</span>
+                    <code style={{ fontSize: '9px', color: '#79dcb8', wordBreak: 'break-all' }}>{regSuccess.otpauthURI}</code>
+                  </div>
+
+                  <p style={{ fontSize: '0.75rem', color: '#8b9a8d', marginTop: '0.5rem', lineHeight: '1.4' }}>
+                    💡 <em>Silakan salin Kunci Base32 di atas ke aplikasi **OTPKEY Authenticator** Windows pegawai tersebut untuk mengaktifkan MFA.</em>
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div style={{ backgroundColor: '#0b1714', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', padding: '1.25rem' }}>
+                <h3 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#ffffff', marginBottom: '0.5rem' }}>
+                  Pedoman Pendaftaran
+                </h3>
+                <p style={{ fontSize: '0.75rem', color: '#8b9a8d', lineHeight: '1.5' }}>
+                  Pendaftaran akun dinas baru secara otomatis membangkitkan pasangan kunci Base32 dinamis yang terisolasi. 
+                  Pegawai baru tersebut wajib mengganti kata sandi awal dan mendaftarkan kunci ke OTPKEY sebelum bisa mengakses Dashboard.
+                </p>
+              </div>
+            )}
+          </aside>
+        </div>
+      ) : (
+        /* Standard Two-Column Workspace Layout */
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 330px', gap: '2rem' }}>
+          
+          {/* Left Column: Recent Correspondence Table */}
+          <section style={{ backgroundColor: '#0b1714', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              <div>
+                <h2 style={{ fontSize: '1rem', fontWeight: 600, color: '#ffffff' }}>Naskah dinas terbaru</h2>
+                <p style={{ fontSize: '0.75rem', color: '#87958a', marginTop: '0.25rem' }}>Register pergerakan dokumen dinas terakhir</p>
+              </div>
+              <label style={{
+                display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#07100f',
+                border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '0.4rem 0.75rem', color: '#829185'
+              }}>
+                <Icon name="search" size={15}/>
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Cari nomor atau perihal"
+                  style={{ width: '140px', background: 'transparent', border: 'none', color: '#ffffff', fontSize: '12px', outline: 'none' }}
+                />
+              </label>
+            </div>
+
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+                <thead style={{ backgroundColor: '#091411', fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#758277' }}>
+                  <tr>
+                    <th style={{ padding: '0.75rem 1.25rem', fontWeight: 400 }}>Nomor Naskah</th>
+                    <th style={{ padding: '0.75rem 0.75rem', fontWeight: 400 }}>Perihal / Unit Kerja</th>
+                    <th style={{ padding: '0.75rem 0.75rem', fontWeight: 400 }}>Klasifikasi</th>
+                    <th style={{ padding: '0.75rem 0.75rem', fontWeight: 400 }}>Aktivitas</th>
+                    <th style={{ padding: '0.75rem 1.25rem' }}/>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((letter) => (
+                    <tr key={letter.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', transition: 'background 0.2s' }}>
+                      <td style={{ padding: '1rem 1.25rem', fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#d8ff43' }}>
+                        {letter.number}
+                      </td>
+                      <td style={{ padding: '1rem 0.75rem' }}>
+                        <p style={{ fontSize: '0.875rem', fontWeight: 500, color: '#e4eae4' }}>{letter.subject}</p>
+                        <p style={{ fontSize: '11px', color: '#849287', marginTop: '0.25rem' }}>Dari: {letter.sender}</p>
+                      </td>
+                      <td style={{ padding: '1rem 0.75rem' }}>
+                        <span className={`badge ${
+                          letter.classification === 'RAHASIA' ? 'badge-secret' :
+                          letter.classification === 'TERBATAS' ? 'badge-confidential' : 'badge-restricted'
+                        }`}>
+                          {letter.classification}
+                        </span>
+                      </td>
+                      <td style={{ padding: '1rem 0.75rem', fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#87958a' }}>
+                        {letter.date}
+                      </td>
+                      <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
+                        <button
+                          onClick={() => onSelectLetter(letter.letterId)}
+                          className="btn-secondary"
+                          style={{ padding: '0.35rem 0.75rem', fontSize: '12px' }}
+                        >
+                          Buka <Icon name="arrow" size={14}/>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+          </section>
+
+          {/* Right Column: Node Security & Timeline Logs */}
+          <aside style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            
+            {/* Node Security Panel */}
+            <section style={{ backgroundColor: '#0b1714', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', padding: '1.25rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
+                <div>
+                  <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#89978c' }}>
+                    Keamanan Ekosistem
+                  </p>
+                  <h2 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#ffffff', marginTop: '0.25rem' }}>Node Utama Aman</h2>
+                </div>
+                <div style={{
+                  display: 'grid', placeItems: 'center', width: '36px', height: '36px',
+                  borderRadius: '50%', border: '1px solid rgba(216,255,67,0.3)', color: '#d8ff43'
+                }}>
+                  <Icon name="check" size={17}/>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {[
+                  ["Crypto Engine (Go)", "TERHUBUNG"],
+                  ["AI Sanitizer (FastAPI)", "TERHUBUNG"],
+                  ["Replikasi Cadangan DB", "AKTIF"]
+                ].map(([node, status]) => (
+                  <div key={node} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '0.75rem' }}>
+                    <span style={{ fontSize: '12px', color: '#aab6aa' }}>{node}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#79dcb8' }}>{status}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Jejak Audit Terakhir Panel */}
+            <section style={{ backgroundColor: '#101d18', borderRadius: '8px', border: '1px solid rgba(216,255,67,0.2)', padding: '1.25rem' }}>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#d8ff43' }}>
+                Jejak Audit Terakhir
+              </p>
+              <div style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '1rem' }}>
+                {[
+                  ["14:32", "Digital Signature Ed25519 diverifikasi", "Budi Santoso"],
+                  ["14:16", "Naskah dinas RAHASIA didekripsi", "Budi Santoso"],
+                  ["13:49", "Audit Chain SHA-256 diverifikasi", "Sistem Core"]
+                ].map(([time, desc, actor]) => (
+                  <div key={time} style={{ position: 'relative' }}>
+                    <span style={{
+                      position: 'absolute', left: '-21px', top: '4px', width: '8px', height: '8px',
+                      borderRadius: '50%', border: '2px solid #101d18', backgroundColor: '#d8ff43'
+                    }}/>
+                    <p style={{ fontSize: '12px', lineHeight: '1.4', color: '#d6ddd6' }}>{desc}</p>
+                    <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#758277', marginTop: '0.25rem' }}>{time} · {actor}</p>
+                  </div>
+                ))}
+              </div>
+              <button style={{ marginTop: '1.25rem', background: 'none', border: 'none', color: '#d8ff43', fontSize: '12px', fontWeight: 500, cursor: 'pointer' }}>
+                Buka Audit Trail Lengkap →
+              </button>
+            </section>
+
+          </aside>
+
+        </div>
+      )}
 
     </div>
   );

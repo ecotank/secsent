@@ -106,7 +106,13 @@ export function getUserMFASecret(username: string): string {
     "staf.sec": "OBSWY3DPEHPK3PXP",        // OTPKEY Key for Ahmad (STAFF)
     "auditor.sys": "PBSWY3DPEHPK3PXP"      // OTPKEY Key for Auditor (AUDITOR)
   };
-  return mapping[username.trim().toLowerCase()] || "JBSWY3DPEHPK3PXP";
+  const key = username.trim().toLowerCase();
+  
+  // Try loading dynamic database key
+  const localSecretsJson = localStorage.getItem("local_user_mfa_secrets");
+  const localSecrets = localSecretsJson ? JSON.parse(localSecretsJson) : {};
+  
+  return localSecrets[key] || mapping[key] || "JBSWY3DPEHPK3PXP";
 }
 
 /**

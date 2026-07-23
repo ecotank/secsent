@@ -96,6 +96,35 @@ export async function loginUser(username: string, password: string, mfaCode: str
     console.warn("Backend offline or DB timeout, executing fallback demo authentication.");
   }
 
+  // --- LOCAL DYNAMIC USER AUTHENTICATOR (STAGING FALLBACK) ---
+  const localUsersJson = localStorage.getItem("local_registered_users");
+  const localUsers = localUsersJson ? JSON.parse(localUsersJson) : [];
+  const foundUser = localUsers.find((u: any) => u.username.trim().toLowerCase() === username.trim().toLowerCase());
+
+  if (foundUser) {
+    const isValid = await validateSecurityPIN(cleanMFA, username);
+    if (!isValid) {
+      throw new Error("Kode Verifikasi MFA/TOTP (6-Digit) tidak cocok atau telah kadaluarsa.");
+    }
+    return {
+      token: "jwt_access_token_" + Date.now(),
+      user: {
+        id: foundUser.id,
+        username: foundUser.username,
+        email: foundUser.email,
+        full_name: foundUser.full_name,
+        nip_nik: foundUser.nip_nik,
+        role: foundUser.role as any,
+        clearance_level: foundUser.clearance_level as any,
+        work_unit: {
+          unit_code: "UK-SEC-001",
+          unit_name: "Bagian Persuratan & Tata Usaha"
+        },
+        password_change_required: true // Force onboarding wizard on login
+      }
+    };
+  }
+
   let role: "ADMIN" | "HEAD_OF_UNIT" | "SECRETARY" | "STAFF" | "AUDITOR" = "HEAD_OF_UNIT";
   let fullName = "Dr. Budi Santoso, M.Si.";
   let clearance: "UNCLASSIFIED" | "RESTRICTED" | "CONFIDENTIAL" | "SECRET" = "CONFIDENTIAL";
