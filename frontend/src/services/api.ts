@@ -103,11 +103,25 @@ export async function loginUser(username: string, password: string, mfaCode: str
   }
 
   // --- LOCAL DYNAMIC USER AUTHENTICATOR (STAGING FALLBACK) ---
+  const defaultPasswords: Record<string, string> = {
+    "ka.unit.sec": "PasswordHead2026!",
+    "sekretaris.sec": "PasswordSec2026!",
+    "staf.sec": "PasswordStaf2026!",
+    "admin.sys": "PasswordAdmin2026!",
+    "auditor.sys": "PasswordAudit2026!"
+  };
+
+  const cleanUsername = username.trim().toLowerCase();
+  const cleanPassword = password.trim();
+
   const localUsersJson = localStorage.getItem("local_registered_users");
   const localUsers = localUsersJson ? JSON.parse(localUsersJson) : [];
-  const foundUser = localUsers.find((u: any) => u.username.trim().toLowerCase() === username.trim().toLowerCase());
+  const foundUser = localUsers.find((u: any) => u.username.trim().toLowerCase() === cleanUsername);
 
   if (foundUser) {
+    if (foundUser.password && cleanPassword !== foundUser.password) {
+      throw new Error("Kombinasi Username dan Kata Sandi tidak cocok.");
+    }
     const isValid = await validateSecurityPIN(cleanMFA, username);
     if (!isValid) {
       throw new Error("Kode Verifikasi MFA/TOTP (6-Digit) tidak cocok atau telah kadaluarsa.");
@@ -131,17 +145,41 @@ export async function loginUser(username: string, password: string, mfaCode: str
     };
   }
 
+  // Validate seed accounts
+  const seedUsernames = ["ka.unit.sec", "sekretaris.sec", "staf.sec", "admin.sys", "auditor.sys"];
+  if (!seedUsernames.includes(cleanUsername)) {
+    throw new Error("Username tidak terdaftar di sistem.");
+  }
+
+  const expectedPassword = defaultPasswords[cleanUsername];
+  if (cleanPassword !== expectedPassword) {
+    throw new Error("Kombinasi Username dan Kata Sandi tidak cocok.");
+  }
+
+  const isValidSeedMFA = await validateSecurityPIN(cleanMFA, cleanUsername);
+  if (!isValidSeedMFA) {
+    throw new Error("Kode Verifikasi MFA/TOTP (6-Digit) tidak cocok atau telah kadaluarsa.");
+  }
+
   let role: "ADMIN" | "HEAD_OF_UNIT" | "SECRETARY" | "STAFF" | "AUDITOR" = "HEAD_OF_UNIT";
   let fullName = "Dr. Budi Santoso, M.Si.";
   let clearance: "UNCLASSIFIED" | "RESTRICTED" | "CONFIDENTIAL" | "SECRET" = "CONFIDENTIAL";
 
-  if (username.includes("sekretaris")) {
+  if (cleanUsername.includes("sekretaris")) {
     role = "SECRETARY";
     fullName = "Siti Rahma, S.AP.";
     clearance = "RESTRICTED";
-  } else if (username.includes("admin")) {
+  } else if (cleanUsername.includes("staf")) {
+    role = "STAFF";
+    fullName = "Ahmad Hidayat, S.Kom.";
+    clearance = "UNCLASSIFIED";
+  } else if (cleanUsername.includes("admin")) {
     role = "ADMIN";
     fullName = "Administrator Utama";
+    clearance = "SECRET";
+  } else if (cleanUsername.includes("auditor")) {
+    role = "AUDITOR";
+    fullName = "Auditor Keamanan Utama";
     clearance = "SECRET";
   }
 
@@ -149,8 +187,8 @@ export async function loginUser(username: string, password: string, mfaCode: str
     token: "jwt_access_token_" + Date.now(),
     user: {
       id: "22222222-2222-2222-2222-222222222222",
-      username: username || "ka.unit.sec",
-      email: `${username || "ka.unit"}@secureoffice.internal`,
+      username: cleanUsername,
+      email: `${cleanUsername}@secureoffice.internal`,
       full_name: fullName,
       nip_nik: "NIP-19820315-002",
       role: role,
@@ -159,7 +197,7 @@ export async function loginUser(username: string, password: string, mfaCode: str
         unit_code: "UK-SEC-001",
         unit_name: "Bagian Persuratan & Tata Usaha"
       },
-      password_change_required: username.trim().toLowerCase() !== "ka.unit.sec" && username.trim().toLowerCase() !== "admin.sys"
+      password_change_required: cleanUsername !== "ka.unit.sec" && cleanUsername !== "admin.sys"
     }
   };
 }

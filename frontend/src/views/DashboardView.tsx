@@ -89,7 +89,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
       nip_nik: newNip.trim(),
       email: newEmail.trim(),
       role: newRole,
-      clearance_level: newClearance
+      clearance_level: newClearance,
+      password: newPassword.trim()
     };
     localUsers.push(newEmployee);
     localStorage.setItem("local_registered_users", JSON.stringify(localUsers));
