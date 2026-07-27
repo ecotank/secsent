@@ -9,6 +9,7 @@ import { validateSecurityPIN, logUnitActivity } from '../utils/webcrypto';
 export const BACKEND_URL = "http://localhost:8080/api/v1";
 export const CRYPTO_URL = "http://localhost:8081/api/v1";
 export const AI_URL = "http://localhost:8000/api/v1";
+export const IS_PRODUCTION = (import.meta as any).env?.PROD || false;
 
 export interface UserProfile {
   id: string;
@@ -94,6 +95,9 @@ export async function loginUser(username: string, password: string, mfaCode: str
     clearTimeout(timeoutId);
     if (e.message && e.message.includes("MFA")) {
       throw e;
+    }
+    if (IS_PRODUCTION) {
+      throw new Error(`Koneksi Keamanan Gagal: Server core backend tidak dapat dijangkau (${e.message || "Timeout"}).`);
     }
     console.warn("Backend offline or DB timeout, executing fallback demo authentication.");
   }
@@ -181,8 +185,11 @@ export async function analyzeLetterWithAI(text: string, subject: string): Promis
     if (res.ok) {
       return await res.json();
     }
-  } catch (e) {
+  } catch (e: any) {
     clearTimeout(timeoutId);
+    if (IS_PRODUCTION) {
+      throw new Error(`AI Scan Failure: Layanan AI Sanitizer tidak dapat dijangkau (${e.message || "Timeout"}).`);
+    }
   }
 
   // --- COMPREHENSIVE LOCAL FALLBACK SCANNER ENGINE ---

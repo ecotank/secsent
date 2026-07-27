@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { UserProfile, BACKEND_URL } from '../services/api';
+import { UserProfile, BACKEND_URL, IS_PRODUCTION } from '../services/api';
 import { AccessLog } from '../utils/webcrypto';
 
 type IconName = "search" | "plus" | "arrow" | "check" | "lock"
@@ -202,10 +202,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
             return;
           }
         }
-      } catch (e) {
-        // graceful fallback to mock records
+      } catch (e: any) {
+        if (IS_PRODUCTION && isMounted) {
+          alert(`Gagal memuat naskah dinas dari server: ${e.message || "Timeout"}`);
+        }
       }
       if (isMounted) {
+        if (IS_PRODUCTION) {
+          setLetters([]);
+          return;
+        }
         const localLettersJson = localStorage.getItem("local_letters");
         if (localLettersJson) {
           setLetters(JSON.parse(localLettersJson));
