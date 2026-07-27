@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { UserProfile } from './services/api';
+import { UserProfile, changeUserPassword } from './services/api';
 import { LoginView } from './views/LoginView';
 import { DashboardView } from './views/DashboardView';
 import { ComposeLetterView } from './views/ComposeLetterView';
@@ -8,7 +8,7 @@ import { OnboardingWizardView } from './views/OnboardingWizardView';
 import { getStoredUserPIN, setStoredUserPIN, logUnitActivity } from './utils/webcrypto';
 import { Lock, ShieldAlert, Key, CheckCircle2 } from 'lucide-react';
 
-type IconName = "grid" | "archive" | "scan" | "file" | "shield" | "chart" | "bell" | "search" | "plus" | "arrow" | "dots" | "check" | "logout"
+type IconName = "grid" | "archive" | "scan" | "file" | "shield" | "chart" | "bell" | "search" | "plus" | "arrow" | "dots" | "check" | "logout" | "key"
 
 function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
   const paths: Record<IconName, React.ReactNode> = {
@@ -25,6 +25,7 @@ function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
     dots: <path d="M5 12h.01M12 12h.01M19 12h.01"/>,
     check: <path d="m5 12 4 4L19 6"/>,
     logout: <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>,
+    key: <><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>
   }
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>
 }
@@ -46,6 +47,45 @@ export function App() {
   const [newPINInput, setNewPINInput] = useState('');
   const [pinMessage, setPinMessage] = useState('');
   const [pinError, setPinError] = useState('');
+
+  // Password Settings Modal State
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPasswordInput, setCurrentPasswordInput] = useState('');
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
+  const [passwordMessage, setPasswordMessage] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  const handleSaveNewPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setPasswordError('');
+    setPasswordMessage('');
+
+    if (newPasswordInput !== confirmPasswordInput) {
+      setPasswordError('Konfirmasi kata sandi baru tidak cocok.');
+      return;
+    }
+
+    if (newPasswordInput.length < 8) {
+      setPasswordError('Kata sandi baru minimal harus 8 karakter.');
+      return;
+    }
+
+    try {
+      await changeUserPassword(user.username, currentPasswordInput, newPasswordInput);
+      setPasswordMessage('Kata sandi berhasil diperbarui secara aman!');
+      setCurrentPasswordInput('');
+      setNewPasswordInput('');
+      setConfirmPasswordInput('');
+      setTimeout(() => {
+        setShowPasswordModal(false);
+        setPasswordMessage('');
+      }, 1500);
+    } catch (err: any) {
+      setPasswordError(err.message || 'Gagal memperbarui kata sandi.');
+    }
+  };
 
   const handleLoginSuccess = (userToken: string, userData: UserProfile) => {
     setToken(userToken);
@@ -212,6 +252,14 @@ export function App() {
           >
             <Icon name="shield"/>
             <span>Pengaturan PIN</span>
+          </button>
+
+          <button
+            onClick={() => setShowPasswordModal(true)}
+            className="sidebar-nav-btn"
+          >
+            <Icon name="key"/>
+            <span>Ganti Sandi</span>
           </button>
 
           <button
@@ -449,6 +497,100 @@ export function App() {
                 </button>
                 <button type="submit" className="btn-primary">
                   Simpan PIN Baru <Key size={14} />
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* 5. Password Change Modal for Sidebar Link */}
+      {showPasswordModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.8)',
+          backdropFilter: 'blur(8px)',
+          zIndex: 300,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1.5rem'
+        }}>
+          <div className="glass-card glass-card-glow" style={{ width: '100%', maxWidth: '440px', padding: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff' }}>
+                <Lock size={18} color="var(--accent-cyan)" /> Pengaturan Kata Sandi
+              </h3>
+              <button onClick={() => setShowPasswordModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
+            </div>
+
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+              Perbarui kata sandi akun Anda. Harap gunakan minimal 8 karakter demi keamanan siber instansi.
+            </p>
+
+            {passwordError && (
+              <div style={{ background: 'rgba(255, 107, 107, 0.12)', color: 'var(--accent-crimson)', padding: '0.5rem', borderRadius: '8px', fontSize: '0.8rem', marginBottom: '1rem' }}>
+                {passwordError}
+              </div>
+            )}
+
+            {passwordMessage && (
+              <div style={{ background: 'rgba(16, 185, 129, 0.12)', color: 'var(--accent-emerald)', padding: '0.5rem', borderRadius: '8px', fontSize: '0.8rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <CheckCircle2 size={16} /> {passwordMessage}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveNewPassword} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+                  Kata Sandi Lama
+                </label>
+                <input
+                  type="password"
+                  className="input-control"
+                  placeholder="Masukkan kata sandi lama"
+                  value={currentPasswordInput}
+                  onChange={(e) => setCurrentPasswordInput(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+                  Kata Sandi Baru (Min. 8 Karakter)
+                </label>
+                <input
+                  type="password"
+                  className="input-control"
+                  placeholder="Masukkan kata sandi baru"
+                  value={newPasswordInput}
+                  onChange={(e) => setNewPasswordInput(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
+                  Konfirmasi Kata Sandi Baru
+                </label>
+                <input
+                  type="password"
+                  className="input-control"
+                  placeholder="Ketik ulang kata sandi baru"
+                  value={confirmPasswordInput}
+                  onChange={(e) => setConfirmPasswordInput(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                <button type="button" className="btn-secondary" onClick={() => setShowPasswordModal(false)}>
+                  Batal
+                </button>
+                <button type="submit" className="btn-primary">
+                  Simpan Sandi Baru <Lock size={14} />
                 </button>
               </div>
             </form>

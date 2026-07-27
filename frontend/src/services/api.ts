@@ -104,11 +104,11 @@ export async function loginUser(username: string, password: string, mfaCode: str
 
   // --- LOCAL DYNAMIC USER AUTHENTICATOR (STAGING FALLBACK) ---
   const defaultPasswords: Record<string, string> = {
-    "ka.unit.sec": "PasswordHead2026!",
-    "sekretaris.sec": "PasswordSec2026!",
-    "staf.sec": "PasswordStaf2026!",
-    "admin.sys": "PasswordAdmin2026!",
-    "auditor.sys": "PasswordAudit2026!"
+    "ka.unit.sec": "pimpinan123",
+    "sekretaris.sec": "sekretaris123",
+    "staf.sec": "staf123",
+    "admin.sys": "admin123",
+    "auditor.sys": "auditor123"
   };
 
   const cleanUsername = username.trim().toLowerCase();
@@ -151,7 +151,8 @@ export async function loginUser(username: string, password: string, mfaCode: str
     throw new Error("Username tidak terdaftar di sistem.");
   }
 
-  const expectedPassword = defaultPasswords[cleanUsername];
+  const storedCustomPassword = localStorage.getItem(`local_user_password_${cleanUsername}`);
+  const expectedPassword = storedCustomPassword || defaultPasswords[cleanUsername];
   if (cleanPassword !== expectedPassword) {
     throw new Error("Kombinasi Username dan Kata Sandi tidak cocok.");
   }
@@ -443,4 +444,75 @@ export async function analyzeLetterWithAI(text: string, subject: string): Promis
     },
     suggested_subject: concludedSubject
   };
+}
+
+/**
+ * Handles password modification dynamically with backend proxy support and local staging persistence fallback.
+ */
+export async function changeUserPassword(username: string, oldPass: string, newPass: string): Promise<void> {
+  const cleanUsername = username.trim().toLowerCase();
+  
+  // 1. Try to call the backend API (if live)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 2000);
+  try {
+    const res = await fetch(`${BACKEND_URL}/auth/change-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: cleanUsername, old_password: oldPass, new_password: newPass }),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    if (res.ok) {
+      logUnitActivity(cleanUsername, "Mengubah Kata Sandi Akun (Backend)", "SUCCESS");
+      return;
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      if (errData.error) {
+        throw new Error(errData.error);
+      }
+    }
+  } catch (e: any) {
+    clearTimeout(timeoutId);
+    if (IS_PRODUCTION) {
+      throw new Error(`Gagal mengubah kata sandi di server: ${e.message || "Timeout"}`);
+    }
+  }
+
+  // 2. Local Fallback authentication change
+  const defaultPasswords: Record<string, string> = {
+    "ka.unit.sec": "pimpinan123",
+    "sekretaris.sec": "sekretaris123",
+    "staf.sec": "staf123",
+    "admin.sys": "admin123",
+    "auditor.sys": "auditor123"
+  };
+
+  const localUsersJson = localStorage.getItem("local_registered_users");
+  const localUsers = localUsersJson ? JSON.parse(localUsersJson) : [];
+  const foundIdx = localUsers.findIndex((u: any) => u.username.trim().toLowerCase() === cleanUsername);
+
+  if (foundIdx !== -1) {
+    const userObj = localUsers[foundIdx];
+    if (userObj.password && oldPass.trim() !== userObj.password) {
+      throw new Error("Kata sandi lama tidak cocok.");
+    }
+    userObj.password = newPass.trim();
+    localUsers[foundIdx] = userObj;
+    localStorage.setItem("local_registered_users", JSON.stringify(localUsers));
+  } else {
+    // Check seed accounts
+    const seedUsernames = ["ka.unit.sec", "sekretaris.sec", "staf.sec", "admin.sys", "auditor.sys"];
+    if (!seedUsernames.includes(cleanUsername)) {
+      throw new Error("Username tidak terdaftar di sistem.");
+    }
+    const currentStoredPass = localStorage.getItem(`local_user_password_${cleanUsername}`);
+    const expectedPass = currentStoredPass || defaultPasswords[cleanUsername];
+    if (oldPass.trim() !== expectedPass) {
+      throw new Error("Kata sandi lama tidak cocok.");
+    }
+    localStorage.setItem(`local_user_password_${cleanUsername}`, newPass.trim());
+  }
+
+  logUnitActivity(cleanUsername, "Mengubah Kata Sandi Akun (Local)", "SUCCESS");
 }
