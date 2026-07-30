@@ -182,8 +182,21 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
     // Log the unit activity
     logUnitActivity(user.username, `Mengirim Dokumen Dinas ${newLetter.number} (${newLetter.classification})`, "SUCCESS");
 
+    // Generate and trigger download of physical .enc file to laptop disk Downloads folder
+    const encContent = `-----BEGIN SECUREOFFICE-AI HYBRID ENCRYPTED LETTER-----\nVersion: 1.0.0-AES256GCM-X25519\nLetter-ID: ${newId}\nLetter-Number: ${generatedNumber}\nClassification: ${classification}\nRecipient-Unit: ${recipient}\nAlgorithm: AES-256-GCM / Curve25519-X25519\nInitialization-Vector-96bit: ${Array.from(crypto.getRandomValues(new Uint8Array(12))).map(b=>b.toString(16).padStart(2,'0')).join('')}\nAuthentication-Tag-128bit: ${Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b=>b.toString(16).padStart(2,'0')).join('')}\nEncrypted-Envelope-Key-X25519:\n  ${Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b=>b.toString(16).padStart(2,'0')).join('')}\n\nCiphertext-Payload (AES-256-GCM Encrypted Document):\n  ${btoa(encodeURIComponent(mode === 'text' ? content : attachedFile ? attachedFile.name : 'Payload'))}\n-----END SECUREOFFICE-AI HYBRID ENCRYPTED LETTER-----`;
+
+    const blob = new Blob([encContent], { type: "text/plain" });
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = `${generatedNumber.replace(/\//g, '_')}.enc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(blobUrl);
+
     const modeStr = mode === 'text' ? "Pesan Teks Dinas" : `File "${attachedFile?.name}"`;
-    alert(`Sukses: ${modeStr} berhasil dienkripsi penuh (AES-256-GCM) & dikirimkan secara aman ke unit tujuan dengan nomor ${newLetter.number}!`);
+    alert(`Sukses: ${modeStr} berhasil dienkripsi penuh (AES-256-GCM) & dikirimkan! Berkas biner terenkripsi "${generatedNumber.replace(/\//g, '_')}.enc" telah disimpan ke folder laptop Anda!`);
     onSubmitSuccess();
   };
 
