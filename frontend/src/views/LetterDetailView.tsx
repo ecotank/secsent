@@ -87,13 +87,7 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
   const handleDownloadFile = () => {
     logUnitActivity(user.username, `Mengunduh Berkas Lampiran Terenkripsi (${mockDetail.fileName})`, "SUCCESS");
     
-    let downloadName = mockDetail.fileName;
-    if (!downloadName.toLowerCase().endsWith('.pdf')) {
-      downloadName += '.pdf';
-    }
-    if (!downloadName.toLowerCase().includes('_decrypted')) {
-      downloadName = downloadName.replace(/\.pdf$/i, '_DECRYPTED.pdf');
-    }
+    const downloadName = mockDetail.fileName;
 
     const safeContent = (mockDetail.content || '').replace(/[()\\]/g, ' ');
     const safeSubject = (mockDetail.subject || '').replace(/[()\\]/g, ' ');
