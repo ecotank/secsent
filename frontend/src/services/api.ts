@@ -537,10 +537,18 @@ export async function saveLetterToNeonDB(letterData: any) {
       const data = await res.json();
       console.log("Neon DB Sync Result:", data);
       return data;
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      console.error("Neon DB Function Error:", res.status, errData);
+      return {
+        status: 'error',
+        statusCode: res.status,
+        error: errData.error || errData.message || `Server Error (${res.status})`,
+        details: errData.details || ''
+      };
     }
   } catch (err: any) {
-    console.warn("Neon DB Sync Error:", err);
+    console.warn("Neon DB Sync Network Error:", err);
     return { status: 'error', error: err.message };
   }
-  return { status: 'error', error: 'Network response not OK' };
 }
