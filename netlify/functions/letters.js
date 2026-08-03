@@ -1,5 +1,29 @@
-const { neon } = require('@neondatabase/serverless');
 const crypto = require('crypto');
+
+async function executeNeonSql(dbUrl, queryText, params = []) {
+  const urlObj = new URL(dbUrl);
+  const endpoint = `https://${urlObj.hostname}/sql`;
+  const authToken = urlObj.password;
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${authToken}`
+    },
+    body: JSON.stringify({
+      query: queryText,
+      params: params
+    })
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Neon HTTP API Query Error (${res.status}): ${errText}`);
+  }
+
+  return await res.json();
+}
 
 exports.handler = async (event, context) => {
   const dbUrl = process.env.DATABASE_URL || process.env.NEON_DATABASE_URL;
@@ -26,33 +50,31 @@ exports.handler = async (event, context) => {
     };
   }
 
-  const sql = neon(dbUrl);
-
   try {
     // 1. Ensure seed data for work_units and users exist to satisfy all FK constraints
-    await sql`
+    await executeNeonSql(dbUrl, `
       INSERT INTO work_units (id, unit_code, unit_name, security_clearance_level)
       VALUES ('11111111-1111-1111-1111-111111111111'::uuid, 'UK-SEC-001', 'Bagian Persuratan & Tata Usaha', 'CONFIDENTIAL'::clearance_level_type)
-      ON CONFLICT (unit_code) DO NOTHING
-    `.catch(() => {});
+      ON CONFLICT (unit_code) DO NOTHING;
+    `).catch(() => {});
 
-    await sql`
+    await executeNeonSql(dbUrl, `
       INSERT INTO work_units (id, unit_code, unit_name, security_clearance_level)
       VALUES ('22222222-2222-2222-2222-222222222222'::uuid, 'UK-ITSEC-001', 'Direktorat Keamanan Informasi & Cyber', 'SECRET'::clearance_level_type)
-      ON CONFLICT (unit_code) DO NOTHING
-    `.catch(() => {});
+      ON CONFLICT (unit_code) DO NOTHING;
+    `).catch(() => {});
 
-    await sql`
+    await executeNeonSql(dbUrl, `
       INSERT INTO users (id, work_unit_id, username, email, password_hash, full_name, nip_nik, role, clearance_level)
       VALUES ('a1111111-1111-1111-1111-111111111111'::uuid, '11111111-1111-1111-1111-111111111111'::uuid, 'ka.unit.sec', 'ka.unit.sec@secsent.internal', 'hash', 'Dr. Budi Santoso, M.Si.', 'NIP-19800101-001', 'HEAD_OF_UNIT'::user_role_type, 'CONFIDENTIAL'::clearance_level_type)
-      ON CONFLICT (username) DO NOTHING
-    `.catch(() => {});
+      ON CONFLICT (username) DO NOTHING;
+    `).catch(() => {});
 
     const clientIp = event.headers['x-forwarded-for'] || '127.0.0.1';
 
     // GET /api/v1/letters -> List all letters
     if (event.httpMethod === 'GET') {
-      const rows = await sql`
+      const result = await executeNeonSql(dbUrl, `
         SELECT 
           l.id, l.letter_number as number, l.category, l.classification, l.status, l.created_at as date,
           l.symmetric_envelope_key, l.encrypted_content_path as fileName,
@@ -60,13 +82,13 @@ exports.handler = async (event, context) => {
         FROM letters l
         LEFT JOIN work_units w ON l.sender_unit_id = w.id
         ORDER BY l.created_at DESC 
-        LIMIT 50
-      `;
+        LIMIT 50;
+      `);
 
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({ status: 'success', data: rows })
+        body: JSON.stringify({ status: 'success', data: result.rows || [] })
       };
     }
 
@@ -82,37 +104,37 @@ exports.handler = async (event, context) => {
         const urgency = (body.urgency || 'SEGERA').toUpperCase();
         const instructionHex = '\\x' + Buffer.from(instruction, 'utf-8').toString('hex');
 
-        await sql`
+        await executeNeonSql(dbUrl, `
           INSERT INTO dispositions (
             id, letter_id, sender_user_id, target_unit_id, instruction_encrypted, urgency_level, disposition_date
           ) VALUES (
             gen_random_uuid(),
-            ${validUuid}::uuid,
+            $1::uuid,
             'a1111111-1111-1111-1111-111111111111'::uuid,
             '22222222-2222-2222-2222-222222222222'::uuid,
-            ${instructionHex}::bytea,
-            ${urgency}::urgency_level_type,
+            $2::bytea,
+            $3::urgency_level_type,
             NOW()
-          )
-        `;
+          );
+        `, [validUuid, instructionHex, urgency]);
 
-        await sql`
-          UPDATE letters SET status = 'DISPOSED'::letter_status_type, updated_at = NOW() WHERE id = ${validUuid}::uuid
-        `;
+        await executeNeonSql(dbUrl, `
+          UPDATE letters SET status = 'DISPOSED'::letter_status_type, updated_at = NOW() WHERE id = $1::uuid;
+        `, [validUuid]);
 
         // Audit Trail
-        await sql`
+        await executeNeonSql(dbUrl, `
           INSERT INTO audit_logs (actor_user_id, action, ip_address, user_agent, previous_hash, current_hash, timestamp)
           VALUES (
             'a1111111-1111-1111-1111-111111111111'::uuid,
             'DISPOSE_LETTER',
-            ${clientIp},
+            $1,
             'SecSent Web Client',
             '0000000000000000000000000000000000000000000000000000000000000000',
             'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
             NOW()
-          )
-        `;
+          );
+        `, [clientIp]).catch(() => {});
 
         return {
           statusCode: 201,
@@ -140,54 +162,54 @@ exports.handler = async (event, context) => {
       const subjectHex = '\\x' + Buffer.from(subjStr, 'utf-8').toString('hex');
 
       // 1. Insert into letters table
-      await sql`
+      await executeNeonSql(dbUrl, `
         INSERT INTO letters (
           id, letter_number, subject_encrypted, classification, category,
           sender_unit_id, encrypted_content_path, symmetric_envelope_key, content_hash, status, created_at, updated_at
         ) VALUES (
-          ${validUuid}::uuid,
-          ${letterNum},
-          ${subjectHex}::bytea,
-          ${classStr}::letter_classification_type,
-          ${catStr},
+          $1::uuid,
+          $2,
+          $3::bytea,
+          $4::letter_classification_type,
+          $5,
           '11111111-1111-1111-1111-111111111111'::uuid,
-          ${fileName || 'Naskah_Dinas.pdf'},
-          ${encryptedPayload || ''},
+          $6,
+          $7,
           '8f4e3c2b1a9f0d8e7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d',
           'SENT'::letter_status_type,
           NOW(),
           NOW()
         )
-        ON CONFLICT (letter_number) DO NOTHING
-      `;
+        ON CONFLICT (letter_number) DO NOTHING;
+      `, [validUuid, letterNum, subjectHex, classStr, catStr, fileName || 'Naskah_Dinas.pdf', encryptedPayload || '']);
 
       // 2. Insert into letter_recipients table
-      await sql`
+      await executeNeonSql(dbUrl, `
         INSERT INTO letter_recipients (
           id, letter_id, recipient_unit_id, recipient_type, created_at
         ) VALUES (
           gen_random_uuid(),
-          ${validUuid}::uuid,
+          $1::uuid,
           '22222222-2222-2222-2222-222222222222'::uuid,
           'PRIMARY'::recipient_type_enum,
           NOW()
         )
-        ON CONFLICT DO NOTHING
-      `.catch(() => {});
+        ON CONFLICT DO NOTHING;
+      `, [validUuid]).catch(() => {});
 
       // 3. Insert into audit_logs table (Tamper-Evident Hash Chaining)
-      await sql`
+      await executeNeonSql(dbUrl, `
         INSERT INTO audit_logs (actor_user_id, action, ip_address, user_agent, previous_hash, current_hash, timestamp)
         VALUES (
           'a1111111-1111-1111-1111-111111111111'::uuid,
           'CREATE_AND_SEND_ENCRYPTED_LETTER',
-          ${clientIp},
+          $1,
           'SecSent Web Client',
           '0000000000000000000000000000000000000000000000000000000000000000',
           'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
           NOW()
-        )
-      `.catch(() => {});
+        );
+      `, [clientIp]).catch(() => {});
 
       return {
         statusCode: 201,
