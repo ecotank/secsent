@@ -45,7 +45,8 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
         signatureAlgorithm: "Ed25519 (Asymmetric EdDSA)",
         timestampToken: "TSA_TIMESTAMP_TOKEN|8f4e3c2b...|2026-07-20T14:30:12Z",
         fileName: cleanFileName,
-        fileSize: 422000,
+        fileDataUrl: found.fileDataUrl || '',
+        fileSize: found.fileSize || 422000,
         contentHash: "8f4e3c2b1a9f0d8e7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d"
       };
     }
@@ -65,6 +66,7 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
       signatureAlgorithm: "Ed25519 (Asymmetric EdDSA)",
       timestampToken: "TSA_TIMESTAMP_TOKEN|8f4e3c2b...|2026-07-20T14:30:12Z",
       fileName: "ND_Pengadaan_Firewall_Enterprise.pdf",
+      fileDataUrl: '',
       fileSize: 422000,
       contentHash: "8f4e3c2b1a9f0d8e7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d"
     };
@@ -88,9 +90,43 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
     logUnitActivity(user.username, `Mengunduh Berkas Lampiran Terenkripsi (${mockDetail.fileName})`, "SUCCESS");
     
     const downloadName = mockDetail.fileName;
+    let blob: Blob;
 
-    const safeContent = (mockDetail.content || '').replace(/[()\\]/g, ' ');
-    const safeSubject = (mockDetail.subject || '').replace(/[()\\]/g, ' ');
+    if (mockDetail.fileDataUrl && mockDetail.fileDataUrl.startsWith('data:')) {
+      // Decode the exact original attached PDF file binary bytes from Data URL
+      try {
+        const parts = mockDetail.fileDataUrl.split(',');
+        const mime = parts[0].match(/:(.*?);/)?.[1] || 'application/pdf';
+        const bstr = atob(parts[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        blob = new Blob([u8arr], { type: mime });
+      } catch (err) {
+        console.error("Failed to decode attached file binary, falling back to PDF generator:", err);
+        blob = createPdfFallbackBlob(mockDetail);
+      }
+    } else {
+      blob = createPdfFallbackBlob(mockDetail);
+    }
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = downloadName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    alert(`Sukses: Dokumen dinas "${downloadName}" berhasil didekripsi & diunduh!`);
+  };
+
+  function createPdfFallbackBlob(detail: any): Blob {
+    const safeContent = (detail.content || '').replace(/[()\\]/g, ' ');
+    const safeSubject = (detail.subject || '').replace(/[()\\]/g, ' ');
     const pdfString = `%PDF-1.4
 1 0 obj
 << /Type /Catalog /Pages 2 0 R >>
@@ -110,15 +146,15 @@ BT
 (SECSENT: DECRYPTED OFFICIAL CORRESPONDENCE PORTAL) Tj
 0 -28 Td
 /F1 10 Tf
-(Nomor Naskah : ${mockDetail.number}) Tj
+(Nomor Naskah : ${detail.number}) Tj
 0 -16 Td
 (Perihal      : ${safeSubject.substring(0, 70)}) Tj
 0 -16 Td
-(Pengirim     : ${mockDetail.senderUnit}) Tj
+(Pengirim     : ${detail.senderUnit}) Tj
 0 -16 Td
-(Klasifikasi  : ${mockDetail.classification}) Tj
+(Klasifikasi  : ${detail.classification}) Tj
 0 -16 Td
-(Tanggal Kirim: ${mockDetail.signedAt}) Tj
+(Tanggal Kirim: ${detail.signedAt}) Tj
 0 -28 Td
 /F1 11 Tf
 (ISI NASKAH DINAS TERDEKRIPSI:) Tj
@@ -148,19 +184,8 @@ trailer
 startxref
 1164
 %%EOF`;
-
-    const blob = new Blob([pdfString], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = downloadName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    alert(`Sukses: Dokumen dinas "${downloadName}" berhasil didekripsi penuh & diunduh sebagai file PDF asli!`);
-  };
+    return new Blob([pdfString], { type: 'application/pdf' });
+  }
 
   const handleDisposeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
