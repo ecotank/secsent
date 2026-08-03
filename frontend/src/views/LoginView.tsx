@@ -66,7 +66,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
           }}>
             <ShieldCheck size={32} />
           </div>
-          <h1 style={{ fontSize: '1.75rem' }} className="gradient-text">SecureOffice-AI</h1>
+          <h1 style={{ fontSize: '1.75rem' }} className="gradient-text">SecSent</h1>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
             Platform Persuratan Dinas Digital Zero-Trust & Agentic AI
           </p>

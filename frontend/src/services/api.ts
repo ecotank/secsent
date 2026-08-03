@@ -189,7 +189,7 @@ export async function loginUser(username: string, password: string, mfaCode: str
     user: {
       id: "22222222-2222-2222-2222-222222222222",
       username: cleanUsername,
-      email: `${cleanUsername}@secureoffice.internal`,
+      email: `${cleanUsername}@secsent.internal`,
       full_name: fullName,
       nip_nik: "NIP-19820315-002",
       role: role,

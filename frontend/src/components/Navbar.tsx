@@ -78,7 +78,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, currentView, setCurrentVie
             <ShieldCheck size={24} />
           </div>
           <div>
-            <h2 style={{ fontSize: '1.25rem', lineHeight: 1.1 }} className="gradient-text">SecureOffice-AI</h2>
+            <h2 style={{ fontSize: '1.25rem', lineHeight: 1.1 }} className="gradient-text">SecSent</h2>
             <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
               Zero-Trust Correspondence Platform
             </span>

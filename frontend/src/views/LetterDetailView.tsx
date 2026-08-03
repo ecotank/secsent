@@ -59,7 +59,7 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
     
     // Generate physical decrypted document blob to trigger actual browser download
     const documentText = `===========================================================
-     SECUREOFFICE-AI: DECRYPTED CORRESPONDENCE PORTAL      
+     SECSENT: DECRYPTED CORRESPONDENCE PORTAL      
 ===========================================================
 Nomor Naskah: ${mockDetail.number}
 Kategori    : ${mockDetail.category}
@@ -150,7 +150,7 @@ Penyebaran tanpa otorisasi terikat ancaman hukum pidana.
           <div>CONFIDENTIAL • {user.full_name} ({user.nip_nik}) • {timestampStr} UTC</div>
           <div>INTERNAL USE ONLY • IP: 127.0.0.1 • CLEARANCE: {user.clearance_level}</div>
           <div>CONFIDENTIAL • {user.full_name} ({user.nip_nik}) • {timestampStr} UTC</div>
-          <div>DO NOT PHOTOCOPY • SECUREOFFICE-AI AUDITED</div>
+          <div>DO NOT PHOTOCOPY • SECSENT AUDITED</div>
         </div>
 
         {/* Verification Banner */}

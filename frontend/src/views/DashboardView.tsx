@@ -99,7 +99,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
     setRegSuccess({
       ...newEmployee,
       secret: userSecret,
-      otpauthURI: `otpauth://totp/SecureOffice-AI:${cleanUsername}?secret=${userSecret}&issuer=SecureOffice-AI`
+      otpauthURI: `otpauth://totp/SecSent:${cleanUsername}?secret=${userSecret}&issuer=SecSent`
     });
 
     // Clear form fields
@@ -403,7 +403,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
                   className="input-control"
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
-                  placeholder="Contoh: staf@secureoffice.internal"
+                  placeholder="Contoh: staf@secsent.internal"
                   required
                 />
               </div>

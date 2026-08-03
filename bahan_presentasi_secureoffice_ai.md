@@ -1,4 +1,4 @@
-# Bahan Presentasi Komprehensif: SecureOffice-AI
+# Bahan Presentasi Komprehensif: SecSent
 ## Sistem Persuratan Digital Terenkripsi End-to-End Berbasis Zero-Trust Architecture
 
 ---
@@ -6,7 +6,7 @@
 ## 📋 DAFTAR ISI PRESENTASI
 1. **Slide 1**: Judul & Pendahuluan
 2. **Slide 2**: Latar Belakang & Rumusan Masalah (Vabilitas TNDE Konvensional)
-3. **Slide 3**: Tujuan Utama Pengembangan SecureOffice-AI
+3. **Slide 3**: Tujuan Utama Pengembangan SecSent
 4. **Slide 4**: Rencana Aplikasi & Arsitektur Mikroservis Modular
 5. **Slide 5**: Pemodelan Ancaman Keamanan (STRIDE Threat Model & Mitigasi)
 6. **Slide 6**: Konsep Kriptografi Hibrida (Hybrid Cryptography & Envelope Encryption)
@@ -23,10 +23,10 @@
 ---
 
 ## SLIDE 1: JUDUL & PENDAHULUAN
-* **Judul Presentasi**: SecureOffice-AI: Penerapan Kriptografi Hibrida dan Agentic AI dalam Tata Naskah Dinas Elektronik Berarsitektur Zero-Trust
+* **Judul Presentasi**: SecSent: Penerapan Kriptografi Hibrida dan Agentic AI dalam Tata Naskah Dinas Elektronik Berarsitektur Zero-Trust
 * **Sub-Judul**: Mengamankan Korespondensi Digital Instansi dari Ancaman Kebocoran Data Internal dan Penyadapan Eksternal
 * **Poin Utama Paparan**:
-  * **Pengenalan Platform**: SecureOffice-AI adalah sistem pengiriman dan pengarsipan surat dinas digital antar unit kerja yang aman, terstruktur, dapat diaudit, dan diperkuat oleh kecerdasan buatan (*AI-enhanced*).
+  * **Pengenalan Platform**: SecSent adalah sistem pengiriman dan pengarsipan surat dinas digital antar unit kerja yang aman, terstruktur, dapat diaudit, dan diperkuat oleh kecerdasan buatan (*AI-enhanced*).
   * **Prinsip Utama**: Mengadopsi doktrin keamanan Zero-Trust (*"Never Trust, Always Verify"*) di mana server dan database dianggap sebagai lingkungan yang berpotensi berbahaya (*untrusted environment*).
   * **Inovasi Inti**: Penggabungan enkripsi simetris berkecepatan tinggi (AES-256-GCM), pertukaran kunci kurva eliptik (X25519), tanda tangan digital (Ed25519), serta pemindaian risiko konten AI secara real-time.
 

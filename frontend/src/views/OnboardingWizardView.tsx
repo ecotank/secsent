@@ -19,7 +19,7 @@ export const OnboardingWizardView: React.FC<OnboardingWizardViewProps> = ({ user
   const [success, setSuccess] = useState('');
 
   const secret = getUserMFASecret(user.username);
-  const otpauthURI = `otpauth://totp/SecureOffice-AI:${user.username}?secret=${secret}&issuer=SecureOffice-AI`;
+  const otpauthURI = `otpauth://totp/SecSent:${user.username}?secret=${secret}&issuer=SecSent`;
 
   const handleStep1Submit = (e: React.FormEvent) => {
     e.preventDefault();
