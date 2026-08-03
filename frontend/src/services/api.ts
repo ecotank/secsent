@@ -108,7 +108,8 @@ export async function loginUser(username: string, password: string, mfaCode: str
     "sekretaris.sec": "sekretaris123",
     "staf.sec": "staf123",
     "admin.sys": "admin123",
-    "auditor.sys": "auditor123"
+    "auditor.sys": "auditor123",
+    "dir.itsec": "direktur123"
   };
 
   const cleanUsername = username.trim().toLowerCase();
@@ -137,8 +138,8 @@ export async function loginUser(username: string, password: string, mfaCode: str
         role: foundUser.role as any,
         clearance_level: foundUser.clearance_level as any,
         work_unit: {
-          unit_code: "UK-SEC-001",
-          unit_name: "Bagian Persuratan & Tata Usaha"
+          unit_code: foundUser.work_unit?.unit_code || "UK-SEC-001",
+          unit_name: foundUser.work_unit?.unit_name || "Bagian Persuratan & Tata Usaha"
         },
         password_change_required: foundUser.password_change_required !== false
       }
@@ -146,7 +147,7 @@ export async function loginUser(username: string, password: string, mfaCode: str
   }
 
   // Validate seed accounts
-  const seedUsernames = ["ka.unit.sec", "sekretaris.sec", "staf.sec", "admin.sys", "auditor.sys"];
+  const seedUsernames = ["ka.unit.sec", "sekretaris.sec", "staf.sec", "admin.sys", "auditor.sys", "dir.itsec"];
   if (!seedUsernames.includes(cleanUsername)) {
     throw new Error("Username tidak terdaftar di sistem.");
   }
@@ -165,8 +166,16 @@ export async function loginUser(username: string, password: string, mfaCode: str
   let role: "ADMIN" | "HEAD_OF_UNIT" | "SECRETARY" | "STAFF" | "AUDITOR" = "HEAD_OF_UNIT";
   let fullName = "Dr. Budi Santoso, M.Si.";
   let clearance: "UNCLASSIFIED" | "RESTRICTED" | "CONFIDENTIAL" | "SECRET" = "CONFIDENTIAL";
+  let unitCode = "UK-SEC-001";
+  let unitName = "Bagian Persuratan & Tata Usaha";
 
-  if (cleanUsername.includes("sekretaris")) {
+  if (cleanUsername.includes("itsec") || cleanUsername.includes("dir")) {
+    role = "HEAD_OF_UNIT";
+    fullName = "Ir. Hendra Wijaya, M.T.";
+    clearance = "SECRET";
+    unitCode = "UK-ITSEC-001";
+    unitName = "Direktorat Keamanan Informasi & Cyber";
+  } else if (cleanUsername.includes("sekretaris")) {
     role = "SECRETARY";
     fullName = "Siti Rahma, S.AP.";
     clearance = "RESTRICTED";
@@ -195,10 +204,10 @@ export async function loginUser(username: string, password: string, mfaCode: str
       role: role,
       clearance_level: clearance,
       work_unit: {
-        unit_code: "UK-SEC-001",
-        unit_name: "Bagian Persuratan & Tata Usaha"
+        unit_code: unitCode,
+        unit_name: unitName
       },
-      password_change_required: cleanUsername !== "ka.unit.sec" && cleanUsername !== "admin.sys"
+      password_change_required: cleanUsername !== "ka.unit.sec" && cleanUsername !== "admin.sys" && cleanUsername !== "dir.itsec"
     }
   };
 }
