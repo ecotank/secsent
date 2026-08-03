@@ -21,24 +21,51 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
 
-  const mockDetail = {
-    id: letterId || "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-    number: "ND/001/UK-SEC-001/VII/2026",
-    subject: "Permohonan Pengadaan Perangkat Keamanan Jaringan & Firewall Enterprise",
-    category: "NOTA_DINAS",
-    classification: "RAHASIA",
-    senderUnit: "Bagian Persuratan & Tata Usaha (UK-SEC-001)",
-    recipientUnit: "Direktorat Keamanan Informasi (UK-ITSEC-001)",
-    ccUnit: "Kantor Pusat / Sekretariat Utama (UK-ROOT)",
-    content: "Diberitahukan kepada Direktur IT & Security bahwa sehubungan dengan peningkatan ancaman serangan cyber, kami mengajukan permohonan pencairan anggaran sebesar Rp 500.000.000 untuk lisensi firewall proyek rahasia ALPHA.",
-    signerName: "Dr. Budi Santoso, M.Si. (Kepala Unit Kerja)",
-    signedAt: "2026-07-20 14:30:12 UTC",
-    signatureAlgorithm: "Ed25519 (Asymmetric EdDSA)",
-    timestampToken: "TSA_TIMESTAMP_TOKEN|8f4e3c2b...|2026-07-20T14:30:12Z",
-    fileName: "ND_Pengadaan_Firewall_Enterprise.pdf",
-    fileSize: 422000,
-    contentHash: "8f4e3c2b1a9f0d8e7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d"
-  };
+  const mockDetail = React.useMemo(() => {
+    const localLettersJson = localStorage.getItem("local_letters");
+    const localLetters = localLettersJson ? JSON.parse(localLettersJson) : [];
+    const found = localLetters.find((l: any) => l.id === letterId || l.letterId === letterId || l.number === letterId);
+
+    if (found) {
+      return {
+        id: found.id || found.letterId || letterId,
+        number: found.number,
+        subject: found.subject,
+        category: found.category || "NOTA_DINAS",
+        classification: found.classification || "BIASA",
+        senderUnit: found.sender || "Bagian Persuratan & Tata Usaha (UK-SEC-001)",
+        recipientUnit: found.recipient || "Direktorat Keamanan Informasi (UK-ITSEC-001)",
+        ccUnit: "Kantor Pusat / Sekretariat Utama (UK-ROOT)",
+        content: found.content || `Perihal Naskah Dinas: ${found.subject}.\n\nDengan hormat,\nBersama ini kami sampaikan naskah dinas resmi nomor ${found.number} untuk dapat ditindaklanjuti sesuai petunjuk pimpinan.\n\nDemikian naskah dinas ini dibuat dengan keamanan penuh terenkripsi (AES-256-GCM).`,
+        signerName: found.sender || "Dr. Budi Santoso, M.Si. (Kepala Unit Kerja)",
+        signedAt: found.date || "2026-07-20 14:30:12 UTC",
+        signatureAlgorithm: "Ed25519 (Asymmetric EdDSA)",
+        timestampToken: "TSA_TIMESTAMP_TOKEN|8f4e3c2b...|2026-07-20T14:30:12Z",
+        fileName: `${found.number.replace(/\//g, '_')}_Attachment.pdf`,
+        fileSize: 422000,
+        contentHash: "8f4e3c2b1a9f0d8e7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d"
+      };
+    }
+
+    return {
+      id: letterId || "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+      number: "ND/001/UK-SEC-001/VII/2026",
+      subject: "Permohonan Pengadaan Perangkat Keamanan Jaringan & Firewall Enterprise",
+      category: "NOTA_DINAS",
+      classification: "RAHASIA",
+      senderUnit: "Bagian Persuratan & Tata Usaha (UK-SEC-001)",
+      recipientUnit: "Direktorat Keamanan Informasi (UK-ITSEC-001)",
+      ccUnit: "Kantor Pusat / Sekretariat Utama (UK-ROOT)",
+      content: "Diberitahukan kepada Direktur IT & Security bahwa sehubungan dengan peningkatan ancaman serangan cyber, kami mengajukan permohonan pencairan anggaran sebesar Rp 500.000.000 untuk lisensi firewall proyek rahasia ALPHA.",
+      signerName: "Dr. Budi Santoso, M.Si. (Kepala Unit Kerja)",
+      signedAt: "2026-07-20 14:30:12 UTC",
+      signatureAlgorithm: "Ed25519 (Asymmetric EdDSA)",
+      timestampToken: "TSA_TIMESTAMP_TOKEN|8f4e3c2b...|2026-07-20T14:30:12Z",
+      fileName: "ND_Pengadaan_Firewall_Enterprise.pdf",
+      fileSize: 422000,
+      contentHash: "8f4e3c2b1a9f0d8e7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d"
+    };
+  }, [letterId]);
 
   const handlePINVerification = async (e: React.FormEvent) => {
     e.preventDefault();
