@@ -20,7 +20,7 @@ exports.handler = async (event, context) => {
       headers,
       body: JSON.stringify({
         status: 'vault_mode',
-        message: 'DATABASE_URL Netlify Variable is not configured yet. Operating in secure client vault mode.'
+        message: 'DATABASE_URL Netlify Variable is not configured yet.'
       })
     };
   }
@@ -28,6 +28,13 @@ exports.handler = async (event, context) => {
   const sql = neon(dbUrl);
 
   try {
+    // 1. Ensure work_units seed exists to satisfy Foreign Key constraints
+    await sql`
+      INSERT INTO work_units (id, unit_code, unit_name, security_clearance_level)
+      VALUES ('11111111-1111-1111-1111-111111111111'::uuid, 'UK-SEC-001', 'Bagian Persuratan & Tata Usaha', 'CONFIDENTIAL'::clearance_level_type)
+      ON CONFLICT (unit_code) DO NOTHING
+    `.catch(() => {});
+
     if (event.httpMethod === 'GET') {
       const rows = await sql`
         SELECT 
@@ -52,15 +59,14 @@ exports.handler = async (event, context) => {
         subject,
         category,
         classification,
-        sender,
-        recipient,
         encryptedPayload,
-        fileName,
-        fileDataUrl
+        fileName
       } = body;
 
       const letterNum = number || `ND/${Math.floor(100 + Math.random() * 900)}/UK-SEC-001/VII/2026`;
       const subjStr = subject || 'Naskah Dinas Terenkripsi';
+      const classStr = (classification || 'BIASA').toUpperCase();
+      const catStr = (category || 'NOTA_DINAS').toUpperCase();
 
       // Insert letter into Neon PostgreSQL letters table
       await sql`
@@ -70,8 +76,8 @@ exports.handler = async (event, context) => {
         ) VALUES (
           ${letterNum},
           ${Buffer.from(subjStr)},
-          ${classification || 'BIASA'}::letter_classification_type,
-          ${category || 'NOTA_DINAS'},
+          ${classStr}::letter_classification_type,
+          ${catStr},
           '11111111-1111-1111-1111-111111111111'::uuid,
           ${fileName || 'Naskah_Dinas.pdf'},
           ${encryptedPayload || ''},
@@ -98,7 +104,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: err.message || 'Database error' })
+      body: JSON.stringify({ error: err.message || 'Database error', details: err.stack })
     };
   }
 };
