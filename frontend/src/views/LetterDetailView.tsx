@@ -27,6 +27,9 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
     const found = localLetters.find((l: any) => l.id === letterId || l.letterId === letterId || l.number === letterId);
 
     if (found) {
+      const rawFileName = found.fileName || `Naskah_Dinas_${found.number.replace(/\//g, '_')}.pdf`;
+      const cleanFileName = rawFileName.toLowerCase().endsWith('.pdf') ? rawFileName : `${rawFileName}.pdf`;
+
       return {
         id: found.id || found.letterId || letterId,
         number: found.number,
@@ -41,7 +44,7 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
         signedAt: found.date || "2026-07-20 14:30:12 UTC",
         signatureAlgorithm: "Ed25519 (Asymmetric EdDSA)",
         timestampToken: "TSA_TIMESTAMP_TOKEN|8f4e3c2b...|2026-07-20T14:30:12Z",
-        fileName: `${found.number.replace(/\//g, '_')}_Attachment.pdf`,
+        fileName: cleanFileName,
         fileSize: 422000,
         contentHash: "8f4e3c2b1a9f0d8e7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d"
       };
@@ -84,13 +87,17 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
   const handleDownloadFile = () => {
     logUnitActivity(user.username, `Mengunduh Berkas Lampiran Terenkripsi (${mockDetail.fileName})`, "SUCCESS");
     
-    const isPdf = mockDetail.fileName.toLowerCase().endsWith('.pdf');
-    let blob: Blob;
     let downloadName = mockDetail.fileName;
+    if (!downloadName.toLowerCase().endsWith('.pdf')) {
+      downloadName += '.pdf';
+    }
+    if (!downloadName.toLowerCase().includes('_decrypted')) {
+      downloadName = downloadName.replace(/\.pdf$/i, '_DECRYPTED.pdf');
+    }
 
-    if (isPdf) {
-      // Create a valid PDF document structure containing the decrypted official correspondence metadata & content
-      const pdfString = `%PDF-1.4
+    const safeContent = (mockDetail.content || '').replace(/[()\\]/g, ' ');
+    const safeSubject = (mockDetail.subject || '').replace(/[()\\]/g, ' ');
+    const pdfString = `%PDF-1.4
 1 0 obj
 << /Type /Catalog /Pages 2 0 R >>
 endobj
@@ -101,27 +108,33 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
 endobj
 4 0 obj
-<< /Length 500 >>
+<< /Length 800 >>
 stream
 BT
 /F1 14 Tf
 50 740 Td
 (SECSENT: DECRYPTED OFFICIAL CORRESPONDENCE PORTAL) Tj
-0 -24 Td
+0 -28 Td
 /F1 10 Tf
-(Nomor Naskah: ${mockDetail.number}) Tj
+(Nomor Naskah : ${mockDetail.number}) Tj
 0 -16 Td
-(Perihal     : ${mockDetail.subject}) Tj
+(Perihal      : ${safeSubject.substring(0, 70)}) Tj
 0 -16 Td
-(Pengirim    : ${mockDetail.senderUnit}) Tj
+(Pengirim     : ${mockDetail.senderUnit}) Tj
 0 -16 Td
-(Klasifikasi : ${mockDetail.classification}) Tj
+(Klasifikasi  : ${mockDetail.classification}) Tj
 0 -16 Td
-(Tanggal     : ${mockDetail.signedAt}) Tj
-0 -24 Td
-(DECRYPTED CONTENT PAYLOAD:) Tj
+(Tanggal Kirim: ${mockDetail.signedAt}) Tj
+0 -28 Td
+/F1 11 Tf
+(ISI NASKAH DINAS TERDEKRIPSI:) Tj
+0 -18 Td
+/F1 10 Tf
+(${safeContent.substring(0, 120)}) Tj
 0 -16 Td
-(${mockDetail.content.replace(/[()\\]/g, '')}) Tj
+(${safeContent.length > 120 ? safeContent.substring(120, 240) : ''}) Tj
+0 -16 Td
+(${safeContent.length > 240 ? safeContent.substring(240, 360) : ''}) Tj
 ET
 endstream
 endobj
@@ -135,43 +148,14 @@ xref
 0000000058 00000 n 
 0000000115 00000 n 
 0000000244 00000 n 
-0000000795 00000 n 
+0000001095 00000 n 
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-864
+1164
 %%EOF`;
-      blob = new Blob([pdfString], { type: 'application/pdf' });
-      downloadName = mockDetail.fileName.toLowerCase().endsWith('_decrypted.pdf')
-        ? mockDetail.fileName
-        : mockDetail.fileName.replace(/\.pdf$/i, '_DECRYPTED.pdf');
-    } else {
-      const documentText = `===========================================================
-     SECSENT: DECRYPTED CORRESPONDENCE PORTAL      
-===========================================================
-Nomor Naskah: ${mockDetail.number}
-Kategori    : ${mockDetail.category}
-Klasifikasi : ${mockDetail.classification}
-Perihal     : ${mockDetail.subject}
-Pengirim    : ${mockDetail.senderUnit}
-Waktu Kirim : ${mockDetail.signedAt}
-Aktor Unduh : ${user.full_name} (${user.role})
 
------------------------------------------------------------
-[DECRYPTION ENGINE STATUS]: SUCCESSFUL
-[ENVELOPE DECRYPTION MODE]: ECIES Hybrid (X25519-AES-GCM)
-[FILE INTEGRITY SECURE]   : SHA-256 Checksum Valid.
------------------------------------------------------------
-
-ISI NASKAH DINAS DEKRIPSI:
-${mockDetail.content}
-===========================================================`;
-      blob = new Blob([documentText], { type: 'text/plain;charset=utf-8' });
-      downloadName = mockDetail.fileName.endsWith('_DECRYPTED.txt')
-        ? mockDetail.fileName
-        : mockDetail.fileName + '_DECRYPTED.txt';
-    }
-
+    const blob = new Blob([pdfString], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -181,7 +165,7 @@ ${mockDetail.content}
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    alert(`Sukses: Dokumen dinas "${mockDetail.fileName}" berhasil didekripsi menggunakan Kunci Sektoral X25519 & diunduh secara aman via secure channel!`);
+    alert(`Sukses: Dokumen dinas "${downloadName}" berhasil didekripsi penuh & diunduh sebagai file PDF asli!`);
   };
 
   const handleDisposeSubmit = (e: React.FormEvent) => {
