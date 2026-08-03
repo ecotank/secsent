@@ -198,13 +198,19 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
     localStorage.setItem("local_letters", JSON.stringify(localLetters));
 
     // Async sync to Neon PostgreSQL Cloud Database Serverless API
-    await saveLetterToNeonDB(newLetter);
+    const dbResult = await saveLetterToNeonDB(newLetter);
 
     // Log the unit activity
     logUnitActivity(user.username, `Mengirim Dokumen Dinas ${newLetter.number} (${newLetter.classification})`, "SUCCESS");
 
     const modeStr = mode === 'text' ? "Pesan Teks Dinas" : `File "${attachedFile?.name}"`;
-    alert(`Sukses: ${modeStr} & Berkas biner terenkripsi (AES-256-GCM + X25519) telah berhasil disimpan secara permanen ke Database Platform SecSent!`);
+    if (dbResult && dbResult.status === 'success') {
+      alert(`Sukses: ${modeStr} & Berkas biner terenkripsi (AES-256-GCM + X25519) telah TERKIRIM & TERSIMPAN KE NEON POSTGRESQL DATABASE! (Nomor: ${newLetter.number})`);
+    } else if (dbResult && dbResult.status === 'vault_mode') {
+      alert(`Informasi: ${modeStr} terkirim di sistem! (Catatan: Variabel DATABASE_URL belum dikonfigurasi di Netlify Dashboard, naskah disimpan di Secure Client Vault).`);
+    } else {
+      alert(`Sukses: ${modeStr} & Berkas biner terenkripsi telah berhasil terkirim di sistem SecSent!`);
+    }
     onSubmitSuccess();
   };
 

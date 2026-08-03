@@ -535,11 +535,12 @@ export async function saveLetterToNeonDB(letterData: any) {
     });
     if (res.ok) {
       const data = await res.json();
-      console.log("Neon DB Sync Success:", data);
+      console.log("Neon DB Sync Result:", data);
       return data;
     }
-  } catch (err) {
-    console.warn("Neon DB Sync Notice (Operating in Client Vault Mode):", err);
+  } catch (err: any) {
+    console.warn("Neon DB Sync Error:", err);
+    return { status: 'error', error: err.message };
   }
-  return null;
+  return { status: 'error', error: 'Network response not OK' };
 }
