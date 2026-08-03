@@ -158,16 +158,16 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
       }
     ];
 
-    // Compute sequences
-    const nextSeqNum = localLetters.length + 1;
+    // Compute unique letter number and valid UUID
+    const uniqueSeq = Math.floor(100 + Math.random() * 900);
     const categoryCode = 
       category === 'NOTA_DINAS' ? 'ND' :
       category === 'SURAT_EDARAN' ? 'SE' :
       category === 'SURAT_KEPUTUSAN' ? 'SK' : 'UND';
     
-    const generatedNumber = `${categoryCode}/${String(nextSeqNum).padStart(3, '0')}/UK-SEC-001/VII/2026`;
-    const newId = `BK-2026-09${18 + nextSeqNum}`;
-    const newLetterId = "ltr-" + Math.random().toString(36).substring(2, 11);
+    const generatedNumber = `${categoryCode}/${uniqueSeq}/UK-SEC-001/VII/2026`;
+    const newId = `BK-2026-${uniqueSeq}`;
+    const newLetterId = crypto.randomUUID();
 
     const now = new Date();
     const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -176,7 +176,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
       id: newId,
       letterId: newLetterId,
       number: generatedNumber,
-      subject: subject.trim() || `Naskah Dinas Tanpa Judul #${nextSeqNum}`,
+      subject: subject.trim() || `Naskah Dinas Tanpa Judul #${uniqueSeq}`,
       category,
       classification,
       sender: user.full_name || "Staf Pelaksana Sektoral",
@@ -196,7 +196,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
       id: newId,
       letterId: newLetterId,
       number: generatedNumber,
-      subject: subject.trim() || `Naskah Dinas Tanpa Judul #${nextSeqNum}`,
+      subject: subject.trim() || `Naskah Dinas Tanpa Judul #${uniqueSeq}`,
       category,
       classification,
       sender: user.full_name,
