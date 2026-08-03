@@ -1,4 +1,5 @@
 const { neon } = require('@neondatabase/serverless');
+const crypto = require('crypto');
 
 exports.handler = async (event, context) => {
   const dbUrl = process.env.DATABASE_URL || process.env.NEON_DATABASE_URL;
@@ -75,10 +76,11 @@ exports.handler = async (event, context) => {
 
       // Check if this is a Disposition action
       if (event.path.includes('/dispositions') || body.action === 'DISPOSITION') {
-        const letterIdStr = body.letterId || body.id || '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d';
-        const validUuid = letterIdStr.length === 36 ? letterIdStr : '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d';
+        const rawId = body.letterId || body.id || '';
+        const validUuid = (rawId && rawId.length === 36) ? rawId : crypto.randomUUID();
         const instruction = body.instruction || 'Disposisi naskah dinas';
         const urgency = (body.urgency || 'SEGERA').toUpperCase();
+        const instructionHex = '\\x' + Buffer.from(instruction, 'utf-8').toString('hex');
 
         await sql`
           INSERT INTO dispositions (
@@ -88,7 +90,7 @@ exports.handler = async (event, context) => {
             ${validUuid}::uuid,
             'a1111111-1111-1111-1111-111111111111'::uuid,
             '22222222-2222-2222-2222-222222222222'::uuid,
-            ${Buffer.from(instruction)},
+            ${instructionHex}::bytea,
             ${urgency}::urgency_level_type,
             NOW()
           )
@@ -130,11 +132,12 @@ exports.handler = async (event, context) => {
       } = body;
 
       const rawId = body.letterId || body.id || '';
-      const validUuid = rawId.length === 36 ? rawId : '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d';
+      const validUuid = (rawId && rawId.length === 36) ? rawId : crypto.randomUUID();
       const letterNum = number || `ND/${Math.floor(100 + Math.random() * 900)}/UK-SEC-001/VII/2026`;
       const subjStr = subject || 'Naskah Dinas Terenkripsi';
       const classStr = (classification || 'BIASA').toUpperCase();
       const catStr = (category || 'NOTA_DINAS').toUpperCase();
+      const subjectHex = '\\x' + Buffer.from(subjStr, 'utf-8').toString('hex');
 
       // 1. Insert into letters table
       await sql`
@@ -144,7 +147,7 @@ exports.handler = async (event, context) => {
         ) VALUES (
           ${validUuid}::uuid,
           ${letterNum},
-          ${Buffer.from(subjStr)},
+          ${subjectHex}::bytea,
           ${classStr}::letter_classification_type,
           ${catStr},
           '11111111-1111-1111-1111-111111111111'::uuid,
