@@ -1,0 +1,14 @@
+[build]
+  command = "cd frontend && npm run build"
+  publish = "frontend/dist"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/v1/letters/*"
+  to = "/.netlify/functions/letters"
+  status = 200
+
+[[redirects]]
+  from = "/api/v1/letters"
+  to = "/.netlify/functions/letters"
+  status = 200

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserProfile, analyzeLetterWithAI, AIRiskScanResponse } from '../services/api';
+import { UserProfile, analyzeLetterWithAI, AIRiskScanResponse, saveLetterToNeonDB } from '../services/api';
 import { Sparkles, ShieldAlert, Send, ArrowLeft, AlertCircle, Upload, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { logUnitActivity } from '../utils/webcrypto';
 
@@ -196,6 +196,9 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
     (newLetter as any).encryptedPayload = encContent;
     localLetters.unshift(newLetter); // Add to the top of list
     localStorage.setItem("local_letters", JSON.stringify(localLetters));
+
+    // Async sync to Neon PostgreSQL Cloud Database Serverless API
+    await saveLetterToNeonDB(newLetter);
 
     // Log the unit activity
     logUnitActivity(user.username, `Mengirim Dokumen Dinas ${newLetter.number} (${newLetter.classification})`, "SUCCESS");

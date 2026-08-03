@@ -525,3 +525,21 @@ export async function changeUserPassword(username: string, oldPass: string, newP
 
   logUnitActivity(cleanUsername, "Mengubah Kata Sandi Akun (Local)", "SUCCESS");
 }
+
+export async function saveLetterToNeonDB(letterData: any) {
+  try {
+    const res = await fetch("/.netlify/functions/letters", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(letterData)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      console.log("Neon DB Sync Success:", data);
+      return data;
+    }
+  } catch (err) {
+    console.warn("Neon DB Sync Notice (Operating in Client Vault Mode):", err);
+  }
+  return null;
+}
