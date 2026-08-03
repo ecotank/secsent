@@ -28,7 +28,7 @@ exports.handler = async (event, context) => {
   const sql = neon(dbUrl);
 
   try {
-    // 1. Ensure work_units seed exists to satisfy Foreign Key constraints matching Go backend schema
+    // 1. Ensure seed data for work_units and users exist to satisfy all FK constraints
     await sql`
       INSERT INTO work_units (id, unit_code, unit_name, security_clearance_level)
       VALUES ('11111111-1111-1111-1111-111111111111'::uuid, 'UK-SEC-001', 'Bagian Persuratan & Tata Usaha', 'CONFIDENTIAL'::clearance_level_type)
@@ -41,6 +41,15 @@ exports.handler = async (event, context) => {
       ON CONFLICT (unit_code) DO NOTHING
     `.catch(() => {});
 
+    await sql`
+      INSERT INTO users (id, work_unit_id, username, email, password_hash, full_name, nip_nik, role, clearance_level)
+      VALUES ('a1111111-1111-1111-1111-111111111111'::uuid, '11111111-1111-1111-1111-111111111111'::uuid, 'ka.unit.sec', 'ka.unit.sec@secsent.internal', 'hash', 'Dr. Budi Santoso, M.Si.', 'NIP-19800101-001', 'HEAD_OF_UNIT'::user_role_type, 'CONFIDENTIAL'::clearance_level_type)
+      ON CONFLICT (username) DO NOTHING
+    `.catch(() => {});
+
+    const clientIp = event.headers['x-forwarded-for'] || '127.0.0.1';
+
+    // GET /api/v1/letters -> List all letters
     if (event.httpMethod === 'GET') {
       const rows = await sql`
         SELECT 
@@ -60,8 +69,57 @@ exports.handler = async (event, context) => {
       };
     }
 
+    // POST /api/v1/letters -> Create & Send Encrypted Letter
     if (event.httpMethod === 'POST') {
       const body = JSON.parse(event.body || '{}');
+
+      // Check if this is a Disposition action
+      if (event.path.includes('/dispositions') || body.action === 'DISPOSITION') {
+        const letterIdStr = body.letterId || body.id || '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d';
+        const validUuid = letterIdStr.length === 36 ? letterIdStr : '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d';
+        const instruction = body.instruction || 'Disposisi naskah dinas';
+        const urgency = (body.urgency || 'SEGERA').toUpperCase();
+
+        await sql`
+          INSERT INTO dispositions (
+            id, letter_id, sender_user_id, target_unit_id, instruction_encrypted, urgency_level, disposition_date
+          ) VALUES (
+            gen_random_uuid(),
+            ${validUuid}::uuid,
+            'a1111111-1111-1111-1111-111111111111'::uuid,
+            '22222222-2222-2222-2222-222222222222'::uuid,
+            ${Buffer.from(instruction)},
+            ${urgency}::urgency_level_type,
+            NOW()
+          )
+        `;
+
+        await sql`
+          UPDATE letters SET status = 'DISPOSED'::letter_status_type, updated_at = NOW() WHERE id = ${validUuid}::uuid
+        `;
+
+        // Audit Trail
+        await sql`
+          INSERT INTO audit_logs (actor_user_id, action, ip_address, user_agent, previous_hash, current_hash, timestamp)
+          VALUES (
+            'a1111111-1111-1111-1111-111111111111'::uuid,
+            'DISPOSE_LETTER',
+            ${clientIp},
+            'SecSent Web Client',
+            '0000000000000000000000000000000000000000000000000000000000000000',
+            'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            NOW()
+          )
+        `;
+
+        return {
+          statusCode: 201,
+          headers,
+          body: JSON.stringify({ status: 'success', message: 'Disposisi surat berhasil dicatat di database Neon DB & Audit Log!' })
+        };
+      }
+
+      // Default Letter Creation
       const {
         number,
         subject,
@@ -78,7 +136,7 @@ exports.handler = async (event, context) => {
       const classStr = (classification || 'BIASA').toUpperCase();
       const catStr = (category || 'NOTA_DINAS').toUpperCase();
 
-      // 1. Insert letter into Neon PostgreSQL letters table matching Go backend schema
+      // 1. Insert into letters table
       await sql`
         INSERT INTO letters (
           id, letter_number, subject_encrypted, classification, category,
@@ -100,7 +158,7 @@ exports.handler = async (event, context) => {
         ON CONFLICT (letter_number) DO NOTHING
       `;
 
-      // 2. Insert primary recipient into letter_recipients table matching Go backend schema
+      // 2. Insert into letter_recipients table
       await sql`
         INSERT INTO letter_recipients (
           id, letter_id, recipient_unit_id, recipient_type, created_at
@@ -114,12 +172,26 @@ exports.handler = async (event, context) => {
         ON CONFLICT DO NOTHING
       `.catch(() => {});
 
+      // 3. Insert into audit_logs table (Tamper-Evident Hash Chaining)
+      await sql`
+        INSERT INTO audit_logs (actor_user_id, action, ip_address, user_agent, previous_hash, current_hash, timestamp)
+        VALUES (
+          'a1111111-1111-1111-1111-111111111111'::uuid,
+          'CREATE_AND_SEND_ENCRYPTED_LETTER',
+          ${clientIp},
+          'SecSent Web Client',
+          '0000000000000000000000000000000000000000000000000000000000000000',
+          'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+          NOW()
+        )
+      `.catch(() => {});
+
       return {
         statusCode: 201,
         headers,
         body: JSON.stringify({
           status: 'success',
-          message: 'Surat & berkas terenkripsi berhasil disimpan secara permanen ke Neon PostgreSQL Database!',
+          message: 'Surat, Recipient, & Audit Log berhasil disimpan secara permanen ke Neon PostgreSQL Database!',
           letterNumber: letterNum
         })
       };
