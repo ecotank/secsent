@@ -191,33 +191,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
 
     const encContent = `-----BEGIN SECSENT HYBRID ENCRYPTED LETTER-----\nVersion: 1.0.0-AES256GCM-X25519\nLetter-ID: ${newId}\nLetter-Number-Encrypted: ${btoa(encodeURIComponent(generatedNumber))}\nEncrypted-Original-Filename: ${encryptedOriginalFilenameHeader}\nClassification: ${classification}\nRecipient-Unit: ${recipient}\nAlgorithm: AES-256-GCM / Curve25519-X25519\nInitialization-Vector-96bit: ${Array.from(crypto.getRandomValues(new Uint8Array(12))).map(b=>b.toString(16).padStart(2,'0')).join('')}\nAuthentication-Tag-128bit: ${Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b=>b.toString(16).padStart(2,'0')).join('')}\nEncrypted-Envelope-Key-X25519:\n  ${Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b=>b.toString(16).padStart(2,'0')).join('')}\n\nCiphertext-Payload (AES-256-GCM Encrypted Document & Filename):\n  ${btoa(encodeURIComponent(mode === 'text' ? content : attachedFile ? attachedFile.name : 'Payload'))}\n-----END SECSENT HYBRID ENCRYPTED LETTER-----`;
 
-    (newLetter as any).fileName = origFileName;
-    (newLetter as any).encryptedPayload = encContent;
-    if (fileDataUrl && fileDataUrl.length < 2000000) {
-      (newLetter as any).fileDataUrl = fileDataUrl;
-    }
-
-    localLetters.unshift(newLetter); // Add to the top of list
-    
-    try {
-      localStorage.setItem("local_letters", JSON.stringify(localLetters));
-    } catch (quotaErr) {
-      console.warn("localStorage quota exceeded, trimming old cached file payloads:", quotaErr);
-      const trimmedLetters = localLetters.map((l: any, idx: number) => {
-        if (idx > 0 && l.fileDataUrl) {
-          const { fileDataUrl, ...rest } = l;
-          return rest;
-        }
-        return l;
-      });
-      try {
-        localStorage.setItem("local_letters", JSON.stringify(trimmedLetters));
-      } catch (e) {
-        console.warn("localStorage fallback triggered:", e);
-      }
-    }
-
-    // Prepare lightweight payload for Neon DB API (without heavy Base64 fileDataUrl string)
+    // Pure Cloud Storage: Direct insert to Neon PostgreSQL Cloud Database (Zero localStorage & Zero local disk)
     const dbPayload = {
       id: newId,
       letterId: newLetterId,
