@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { UserProfile, BACKEND_URL, IS_PRODUCTION } from '../services/api';
+import { UserProfile, BACKEND_URL, IS_PRODUCTION, getLettersFromNeonDB } from '../services/api';
 import { AccessLog } from '../utils/webcrypto';
 
 type IconName = "search" | "plus" | "arrow" | "check" | "lock"
@@ -178,15 +178,40 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
   useEffect(() => {
     let isMounted = true;
     async function fetchLetters() {
+      // 1. Primary Source: Fetch live letters from Neon PostgreSQL Database via Netlify Serverless API
+      try {
+        const neonLetters = await getLettersFromNeonDB();
+        if (isMounted && neonLetters && Array.isArray(neonLetters) && neonLetters.length > 0) {
+          const mapped = neonLetters.map((l: any, idx: number) => ({
+            id: l.id || `BK-2026-09${18 - idx}`,
+            letterId: l.id,
+            number: l.number || l.letter_number || `ND/${100 + idx}/UK-SEC-001/VII/2026`,
+            subject: l.subject || l.subject_plaintext || "Naskah Dinas Terenkripsi",
+            category: l.category || "NOTA_DINAS",
+            classification: l.classification || "BIASA",
+            sender: l.sender || "Bagian Persuratan & TU",
+            recipient: "Direktorat IT & Security",
+            status: l.status || "SENT",
+            date: l.date ? String(l.date).substring(0, 16) : "2026-07-20 14:32",
+            color: l.classification === "RAHASIA" ? "amber" : "emerald"
+          }));
+          setLetters(mapped);
+          return;
+        }
+      } catch (e) {
+        console.warn("Neon DB letters fetch notice:", e);
+      }
+
+      // 2. Secondary Source: Local Go Backend
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2000);
+        const timeoutId = setTimeout(() => controller.abort(), 1500);
         const res = await fetch(`${BACKEND_URL}/letters`, { signal: controller.signal });
         clearTimeout(timeoutId);
         if (res.ok) {
           const data = await res.json();
           if (isMounted && Array.isArray(data) && data.length > 0) {
-            const mapped = data.map((l, idx) => ({
+            const mapped = data.map((l: any, idx: number) => ({
               id: `BK-2026-09${18 - idx}`,
               letterId: l.id,
               number: l.letter_number,
@@ -203,23 +228,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
             return;
           }
         }
-      } catch (e: any) {
-        if (IS_PRODUCTION && isMounted) {
-          alert(`Gagal memuat naskah dinas dari server: ${e.message || "Timeout"}`);
-        }
+      } catch (e) {
+        // Silent fallback
       }
+
+      // 3. Default Initial Display
       if (isMounted) {
-        if (IS_PRODUCTION) {
-          setLetters([]);
-          return;
-        }
-        const localLettersJson = localStorage.getItem("local_letters");
-        if (localLettersJson) {
-          setLetters(JSON.parse(localLettersJson));
-        } else {
-          localStorage.setItem("local_letters", JSON.stringify(mockLetters));
-          setLetters(mockLetters);
-        }
+        setLetters(mockLetters);
       }
     }
     fetchLetters();

@@ -552,3 +552,21 @@ export async function saveLetterToNeonDB(letterData: any) {
     return { status: 'error', error: err.message };
   }
 }
+
+export async function getLettersFromNeonDB() {
+  try {
+    const res = await fetch("/.netlify/functions/letters", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.status === 'success' && Array.isArray(data.data)) {
+        return data.data;
+      }
+    }
+  } catch (err) {
+    console.warn("Failed to fetch letters from Neon DB Serverless API:", err);
+  }
+  return null;
+}
