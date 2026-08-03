@@ -84,8 +84,69 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
   const handleDownloadFile = () => {
     logUnitActivity(user.username, `Mengunduh Berkas Lampiran Terenkripsi (${mockDetail.fileName})`, "SUCCESS");
     
-    // Generate physical decrypted document blob to trigger actual browser download
-    const documentText = `===========================================================
+    const isPdf = mockDetail.fileName.toLowerCase().endsWith('.pdf');
+    let blob: Blob;
+    let downloadName = mockDetail.fileName;
+
+    if (isPdf) {
+      // Create a valid PDF document structure containing the decrypted official correspondence metadata & content
+      const pdfString = `%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 500 >>
+stream
+BT
+/F1 14 Tf
+50 740 Td
+(SECSENT: DECRYPTED OFFICIAL CORRESPONDENCE PORTAL) Tj
+0 -24 Td
+/F1 10 Tf
+(Nomor Naskah: ${mockDetail.number}) Tj
+0 -16 Td
+(Perihal     : ${mockDetail.subject}) Tj
+0 -16 Td
+(Pengirim    : ${mockDetail.senderUnit}) Tj
+0 -16 Td
+(Klasifikasi : ${mockDetail.classification}) Tj
+0 -16 Td
+(Tanggal     : ${mockDetail.signedAt}) Tj
+0 -24 Td
+(DECRYPTED CONTENT PAYLOAD:) Tj
+0 -16 Td
+(${mockDetail.content.replace(/[()\\]/g, '')}) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000244 00000 n 
+0000000795 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+864
+%%EOF`;
+      blob = new Blob([pdfString], { type: 'application/pdf' });
+      downloadName = mockDetail.fileName.toLowerCase().endsWith('_decrypted.pdf')
+        ? mockDetail.fileName
+        : mockDetail.fileName.replace(/\.pdf$/i, '_DECRYPTED.pdf');
+    } else {
+      const documentText = `===========================================================
      SECSENT: DECRYPTED CORRESPONDENCE PORTAL      
 ===========================================================
 Nomor Naskah: ${mockDetail.number}
@@ -104,22 +165,16 @@ Aktor Unduh : ${user.full_name} (${user.role})
 
 ISI NASKAH DINAS DEKRIPSI:
 ${mockDetail.content}
-
------------------------------------------------------------
-⚠️ Peringatan: Dokumen ini bersifat RAHASIA NEGARA dan dilindungi
-oleh hukum persandian serta keamanan siber instansi.
-Penyebaran tanpa otorisasi terikat ancaman hukum pidana.
 ===========================================================`;
+      blob = new Blob([documentText], { type: 'text/plain;charset=utf-8' });
+      downloadName = mockDetail.fileName.endsWith('_DECRYPTED.txt')
+        ? mockDetail.fileName
+        : mockDetail.fileName + '_DECRYPTED.txt';
+    }
 
-    const blob = new Blob([documentText], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    
-    const downloadName = mockDetail.fileName.endsWith('.pdf')
-      ? mockDetail.fileName.replace('.pdf', '_DECRYPTED.txt')
-      : mockDetail.fileName + '_DECRYPTED.txt';
-      
     link.download = downloadName;
     document.body.appendChild(link);
     link.click();
