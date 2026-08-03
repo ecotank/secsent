@@ -50,12 +50,19 @@ exports.handler = async (event, context) => {
 
     const clientIp = (event.headers && (event.headers['x-forwarded-for'] || event.headers['X-Forwarded-For'])) || '127.0.0.1';
 
-    // GET /api/v1/letters -> List all letters
+    // GET /api/v1/letters -> List all letters from Neon DB
     if (event.httpMethod === 'GET') {
       const rows = await sql`
         SELECT 
-          l.id, l.letter_number as number, l.category, l.classification, l.status, l.created_at as date,
-          l.symmetric_envelope_key, l.encrypted_content_path as fileName,
+          l.id,
+          l.letter_number as number,
+          encode(l.subject_encrypted, 'escape') as subject,
+          l.category,
+          l.classification,
+          l.status,
+          l.created_at as date,
+          l.symmetric_envelope_key,
+          l.encrypted_content_path as fileName,
           w.unit_name as sender
         FROM letters l
         LEFT JOIN work_units w ON l.sender_unit_id = w.id
@@ -70,7 +77,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // POST /api/v1/letters -> Create & Send Encrypted Letter
+    // POST /api/v1/letters -> Create & Send Encrypted Letter to Neon DB
     if (event.httpMethod === 'POST') {
       const body = JSON.parse(event.body || '{}');
 
@@ -80,6 +87,7 @@ exports.handler = async (event, context) => {
         const validUuid = (rawId && rawId.length === 36) ? rawId : crypto.randomUUID();
         const instruction = body.instruction || 'Disposisi naskah dinas';
         const urgency = (body.urgency || 'SEGERA').toUpperCase();
+        const instructionHex = '\\x' + Buffer.from(instruction, 'utf-8').toString('hex');
 
         await sql`
           INSERT INTO dispositions (
@@ -89,7 +97,7 @@ exports.handler = async (event, context) => {
             ${validUuid}::uuid,
             'a1111111-1111-1111-1111-111111111111'::uuid,
             '22222222-2222-2222-2222-222222222222'::uuid,
-            ${Buffer.from(instruction)},
+            ${instructionHex}::bytea,
             ${urgency}::urgency_level_type,
             NOW()
           )
@@ -136,6 +144,7 @@ exports.handler = async (event, context) => {
       const subjStr = subject || 'Naskah Dinas Terenkripsi';
       const classStr = (classification || 'BIASA').toUpperCase();
       const catStr = (category || 'NOTA_DINAS').toUpperCase();
+      const subjectHex = '\\x' + Buffer.from(subjStr, 'utf-8').toString('hex');
 
       // 1. Insert into letters table
       await sql`
@@ -145,7 +154,7 @@ exports.handler = async (event, context) => {
         ) VALUES (
           ${validUuid}::uuid,
           ${letterNum},
-          ${Buffer.from(subjStr)},
+          ${subjectHex}::bytea,
           ${classStr}::letter_classification_type,
           ${catStr},
           '11111111-1111-1111-1111-111111111111'::uuid,
