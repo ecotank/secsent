@@ -1,28 +1,62 @@
+const https = require('https');
 const crypto = require('crypto');
 
-async function executeNeonSql(dbUrl, queryText, params = []) {
-  const urlObj = new URL(dbUrl);
-  const endpoint = `https://${urlObj.hostname}/sql`;
-  const authToken = urlObj.password;
+function executeNeonSql(dbUrl, queryText, params = []) {
+  return new Promise((resolve, reject) => {
+    try {
+      if (!dbUrl) {
+        return reject(new Error("DATABASE_URL is missing"));
+      }
 
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${authToken}`
-    },
-    body: JSON.stringify({
-      query: queryText,
-      params: params
-    })
+      const cleanUrl = dbUrl.trim().replace(/^postgresql:/, 'postgres:');
+      const urlObj = new URL(cleanUrl);
+      const hostname = urlObj.hostname;
+      const rawPassword = urlObj.password || '';
+      const password = decodeURIComponent(rawPassword);
+
+      const postData = JSON.stringify({
+        query: queryText,
+        params: params
+      });
+
+      const options = {
+        hostname: hostname,
+        port: 443,
+        path: '/sql',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(postData),
+          'Authorization': `Bearer ${password}`
+        }
+      };
+
+      const req = https.request(options, (res) => {
+        let body = '';
+        res.on('data', (chunk) => { body += chunk; });
+        res.on('end', () => {
+          if (res.statusCode >= 200 && res.statusCode < 300) {
+            try {
+              resolve(JSON.parse(body));
+            } catch (e) {
+              reject(new Error(`Failed to parse Neon response: ${body}`));
+            }
+          } else {
+            reject(new Error(`Neon HTTP API Error (${res.statusCode}): ${body}`));
+          }
+        });
+      });
+
+      req.on('error', (err) => {
+        reject(err);
+      });
+
+      req.write(postData);
+      req.end();
+    } catch (err) {
+      reject(err);
+    }
   });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Neon HTTP API Query Error (${res.status}): ${errText}`);
-  }
-
-  return await res.json();
 }
 
 exports.handler = async (event, context) => {

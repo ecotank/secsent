@@ -3,6 +3,10 @@
   publish = "dist"
   functions = "netlify/functions"
 
+[build.environment]
+  NODE_VERSION = "20"
+  AWS_LAMBDA_JS_RUNTIME = "nodejs20.x"
+
 [[redirects]]
   from = "/api/v1/letters/*"
   to = "/.netlify/functions/letters"
