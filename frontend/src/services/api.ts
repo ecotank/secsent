@@ -6,10 +6,10 @@
 
 import { validateSecurityPIN, logUnitActivity } from '../utils/webcrypto';
 
-export const BACKEND_URL = "http://localhost:8080/api/v1";
-export const CRYPTO_URL = "http://localhost:8081/api/v1";
-export const AI_URL = "http://localhost:8000/api/v1";
-export const IS_PRODUCTION = (import.meta as any).env?.PROD || false;
+export const BACKEND_URL = (import.meta as any).env?.VITE_BACKEND_URL || "http://localhost:8080/api/v1";
+export const CRYPTO_URL = (import.meta as any).env?.VITE_CRYPTO_URL || "http://localhost:8081/api/v1";
+export const AI_URL = (import.meta as any).env?.VITE_AI_URL || "http://localhost:8000/api/v1";
+export const IS_PRODUCTION = Boolean((import.meta as any).env?.VITE_BACKEND_URL && !(import.meta as any).env?.VITE_BACKEND_URL.includes("localhost"));
 
 export interface UserProfile {
   id: string;
