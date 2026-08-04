@@ -336,35 +336,13 @@ export function App() {
 
           <button
             onClick={() => {
-              setSecurityTab('2fa');
-              setShowSecurityModal(true);
-            }}
-            className="sidebar-nav-btn"
-          >
-            <QrCode size={18} color="var(--accent-cyan)" />
-            <span>2FA Authenticator</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setSecurityTab('pin');
-              setShowSecurityModal(true);
-            }}
-            className="sidebar-nav-btn"
-          >
-            <Icon name="shield"/>
-            <span>Pengaturan PIN</span>
-          </button>
-
-          <button
-            onClick={() => {
               setSecurityTab('password');
               setShowSecurityModal(true);
             }}
-            className="sidebar-nav-btn"
+            className={`sidebar-nav-btn ${showSecurityModal ? 'active' : ''}`}
           >
-            <Icon name="key"/>
-            <span>Ganti Sandi</span>
+            <Key size={18} color="var(--accent-cyan)" />
+            <span>Keamanan & 2FA</span>
           </button>
 
           <button
@@ -822,8 +800,20 @@ export function App() {
                   Pindai QR Code di bawah dengan **Google Authenticator, Authy, atau Microsoft Authenticator** di HP Anda untuk verifikasi MFA 2-Faktor.
                 </p>
 
-                {/* SVG QR CODE GENERATION */}
-                <div dangerouslySetInnerHTML={{ __html: generateQRCodeSVG(otpauthURI, 180) }} />
+                {/* HIGH-CONTRAST 100% SCANNABLE QR CODE FROM PUBLIC API */}
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(otpauthURI)}`}
+                  alt="2FA QR Code"
+                  style={{
+                    width: '180px',
+                    height: '180px',
+                    borderRadius: '8px',
+                    border: '2px solid var(--accent-cyan)',
+                    padding: '6px',
+                    background: '#fff',
+                    boxShadow: '0 8px 24px rgba(0, 242, 254, 0.2)'
+                  }}
+                />
 
                 {/* Base32 Secret Key Copy Wrapper */}
                 <div style={{
