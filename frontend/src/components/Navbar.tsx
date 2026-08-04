@@ -241,31 +241,26 @@ export const Navbar: React.FC<NavbarProps> = ({ user, currentView, setCurrentVie
                 background: 'rgba(255, 255, 255, 0.05)',
                 border: '1px solid var(--border-glass)',
                 color: 'var(--text-main)',
-                padding: '0.5rem',
+                padding: '0.5rem 0.85rem',
                 borderRadius: '8px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
+                gap: '0.4rem',
+                fontSize: '0.8rem',
+                fontWeight: 600,
                 position: 'relative'
               }}
             >
-              <Bell size={18} />
+              <Bell size={16} color="var(--accent-cyan)" /> Notifikasi
               {unreadCount > 0 && (
                 <span style={{
-                  position: 'absolute',
-                  top: '-4px',
-                  right: '-4px',
                   background: '#ef4444',
                   color: '#fff',
                   fontSize: '0.65rem',
                   fontWeight: 700,
-                  width: '18px',
-                  height: '18px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  padding: '0.1rem 0.4rem',
+                  borderRadius: '10px',
                   boxShadow: '0 0 8px rgba(239, 68, 68, 0.6)'
                 }}>
                   {unreadCount}
@@ -361,18 +356,20 @@ export const Navbar: React.FC<NavbarProps> = ({ user, currentView, setCurrentVie
             onClick={() => setShowSettingsModal(true)}
             title="Pengaturan Akun & Keamanan 2FA / PIN / Password"
             style={{
-              background: 'rgba(0, 242, 254, 0.1)',
-              border: '1px solid rgba(0, 242, 254, 0.3)',
+              background: 'rgba(0, 242, 254, 0.12)',
+              border: '1px solid rgba(0, 242, 254, 0.4)',
               color: 'var(--accent-cyan)',
-              padding: '0.5rem',
+              padding: '0.5rem 0.85rem',
               borderRadius: '8px',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              gap: '0.4rem',
+              fontSize: '0.8rem',
+              fontWeight: 600
             }}
           >
-            <Key size={18} />
+            <Key size={16} /> Keamanan & 2FA
           </button>
 
           <button
