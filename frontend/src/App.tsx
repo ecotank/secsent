@@ -69,6 +69,21 @@ export function App() {
   const [unreadNotifCount, setUnreadNotifCount] = useState(3);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [notifFilter, setNotifFilter] = useState<'all' | 'letter' | 'security'>('all');
+  const notifRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setShowNotifDrawer(false);
+      }
+    }
+    if (showNotifDrawer) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showNotifDrawer]);
 
   const secretKey = user ? getUserMFASecret(user.username) : "JBSWY3DPEHPK3PXP";
   const otpauthURI = user ? `otpauth://totp/SecSent:${user.username}?secret=${secretKey}&issuer=SecSent` : "";
@@ -384,7 +399,7 @@ export function App() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', position: 'relative' }}>
             
             {/* Functional Notification Bell Icon Button */}
-            <div style={{ position: 'relative' }}>
+            <div ref={notifRef} style={{ position: 'relative' }}>
               <button
                 onClick={() => setShowNotifDrawer(!showNotifDrawer)}
                 style={{
