@@ -32,8 +32,13 @@ function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
 }
 
 export function App() {
-  const [token, setToken] = useState<string | null>(null);
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [token, setToken] = useState<string | null>(() => {
+    return sessionStorage.getItem("secsent_session_token");
+  });
+  const [user, setUser] = useState<UserProfile | null>(() => {
+    const stored = sessionStorage.getItem("secsent_session_user");
+    return stored ? JSON.parse(stored) : null;
+  });
   const [currentView, setCurrentView] = useState<'dashboard' | 'compose' | 'detail'>('dashboard');
   const [selectedLetterId, setSelectedLetterId] = useState<string>('');
 
@@ -205,6 +210,8 @@ export function App() {
   };
 
   const handleLoginSuccess = (userToken: string, userData: UserProfile) => {
+    sessionStorage.setItem("secsent_session_token", userToken);
+    sessionStorage.setItem("secsent_session_user", JSON.stringify(userData));
     setToken(userToken);
     setUser(userData);
     setCurrentView('dashboard');
@@ -215,6 +222,8 @@ export function App() {
     if (user) {
       logUnitActivity(user.username, "Sesi Keluar (Logout)", "SUCCESS");
     }
+    sessionStorage.removeItem("secsent_session_token");
+    sessionStorage.removeItem("secsent_session_user");
     setToken(null);
     setUser(null);
     setIsLocked(false);
