@@ -57,6 +57,18 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
       const rawFileName = found.fileName || `Naskah_Dinas_${(found.number || '001').replace(/\//g, '_')}.pdf`;
       const cleanFileName = rawFileName.toLowerCase().endsWith('.pdf') ? rawFileName : `${rawFileName}.pdf`;
 
+      let resolvedContent = found.content;
+      if (!resolvedContent && found.encryptedPayload && typeof found.encryptedPayload === 'string' && found.encryptedPayload.startsWith('TEXT_CONTENT:')) {
+        resolvedContent = found.encryptedPayload.replace('TEXT_CONTENT:', '');
+      } else if (!resolvedContent && found.fileDataUrl && typeof found.fileDataUrl === 'string' && found.fileDataUrl.startsWith('TEXT_CONTENT:')) {
+        resolvedContent = found.fileDataUrl.replace('TEXT_CONTENT:', '');
+      } else if (!resolvedContent && found.symmetric_envelope_key && typeof found.symmetric_envelope_key === 'string' && found.symmetric_envelope_key.startsWith('TEXT_CONTENT:')) {
+        resolvedContent = found.symmetric_envelope_key.replace('TEXT_CONTENT:', '');
+      }
+
+      const fileUrl = (found.fileDataUrl && typeof found.fileDataUrl === 'string' && found.fileDataUrl.startsWith('data:')) ? found.fileDataUrl : 
+                      (found.symmetric_envelope_key && typeof found.symmetric_envelope_key === 'string' && found.symmetric_envelope_key.startsWith('data:')) ? found.symmetric_envelope_key : '';
+
       return {
         id: found.id || found.letterId || letterId,
         number: found.number || found.letter_number || "ND/001/UK-SEC-001/VII/2026",
@@ -66,13 +78,13 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
         senderUnit: found.sender || "Bagian Persuratan & Tata Usaha (UK-SEC-001)",
         recipientUnit: found.recipient || "Direktorat Keamanan Informasi (UK-ITSEC-001)",
         ccUnit: "Kantor Pusat / Sekretariat Utama (UK-ROOT)",
-        content: found.content || `Perihal Naskah Dinas: ${found.subject || 'Terlampir Dokumen Resmi'}.\n\nDengan hormat,\nBersama ini kami sampaikan naskah dinas resmi nomor ${found.number || ''} untuk dapat ditindaklanjuti sesuai petunjuk pimpinan.\n\nDemikian naskah dinas ini dibuat dengan keamanan penuh terenkripsi (AES-256-GCM + X25519).`,
+        content: resolvedContent || `Perihal Naskah Dinas: ${found.subject || 'Terlampir Dokumen Resmi'}.\n\nDengan hormat,\nBersama ini kami sampaikan naskah dinas resmi nomor ${found.number || ''} untuk dapat ditindaklanjuti sesuai petunjuk pimpinan.\n\nDemikian naskah dinas ini dibuat dengan keamanan penuh terenkripsi (AES-256-GCM + X25519).`,
         signerName: found.sender || "Dr. Budi Santoso, M.Si. (Kepala Unit Kerja)",
         signedAt: found.date || "2026-07-20 14:30:12 UTC",
         signatureAlgorithm: "Ed25519 (Asymmetric EdDSA)",
         timestampToken: "TSA_TIMESTAMP_TOKEN|8f4e3c2b...|2026-07-20T14:30:12Z",
         fileName: cleanFileName,
-        fileDataUrl: found.fileDataUrl || found.symmetric_envelope_key || '',
+        fileDataUrl: fileUrl,
         fileSize: found.fileSize || 422000,
         contentHash: "8f4e3c2b1a9f0d8e7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d"
       };
