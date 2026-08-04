@@ -242,10 +242,33 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
   }, []);
 
   const filtered = useMemo(() => {
-    return letters.filter((l) =>
-      `${l.number} ${l.subject}`.toLowerCase().includes(query.toLowerCase())
-    );
-  }, [letters, query]);
+    return letters.filter((l) => {
+      const q = query.toLowerCase().trim();
+      const matchesSearch = !q || `${l.number || ''} ${l.subject || ''} ${l.sender || ''} ${l.recipient || ''}`.toLowerCase().includes(q);
+      if (!matchesSearch) return false;
+
+      // Admins and Auditors can view all letters for system monitoring
+      if (user.role === 'ADMIN' || user.role === 'AUDITOR') {
+        return true;
+      }
+
+      const userUnitName = (user.work_unit?.unit_name || "").toLowerCase();
+      const userUnitCode = (user.work_unit?.unit_code || "").toLowerCase();
+      const userFullName = (user.full_name || "").toLowerCase();
+
+      const senderStr = `${l.sender || ''}`.toLowerCase();
+      const recipientStr = `${l.recipient || ''}`.toLowerCase();
+
+      const isSender = senderStr.includes(userUnitName) || senderStr.includes(userUnitCode) || senderStr.includes(userFullName);
+      const isRecipient = recipientStr.includes(userUnitName) || recipientStr.includes(userUnitCode) ||
+                          (userUnitCode === "uk-sec-001" && (recipientStr.includes("persuratan") || recipientStr.includes("sec"))) ||
+                          (userUnitCode === "uk-itsec-001" && (recipientStr.includes("it") || recipientStr.includes("keamanan") || recipientStr.includes("cyber"))) ||
+                          (userUnitCode === "uk-fin-001" && (recipientStr.includes("keuangan") || recipientStr.includes("fin"))) ||
+                          (userUnitCode === "uk-legal-001" && (recipientStr.includes("hukum") || recipientStr.includes("legal")));
+
+      return isSender || isRecipient;
+    });
+  }, [letters, query, user]);
 
   const timestampStr = useMemo(() => {
     const d = new Date();

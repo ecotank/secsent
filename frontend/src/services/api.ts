@@ -109,7 +109,9 @@ export async function loginUser(username: string, password: string, mfaCode: str
     "staf.sec": "staf123",
     "admin.sys": "admin123",
     "auditor.sys": "auditor123",
-    "dir.itsec": "direktur123"
+    "dir.itsec": "direktur123",
+    "dir.fin": "keuangan123",
+    "dir.legal": "hukum123"
   };
 
   const cleanUsername = username.trim().toLowerCase();
@@ -147,7 +149,7 @@ export async function loginUser(username: string, password: string, mfaCode: str
   }
 
   // Validate seed accounts
-  const seedUsernames = ["ka.unit.sec", "sekretaris.sec", "staf.sec", "admin.sys", "auditor.sys", "dir.itsec"];
+  const seedUsernames = ["ka.unit.sec", "sekretaris.sec", "staf.sec", "admin.sys", "auditor.sys", "dir.itsec", "dir.fin", "dir.legal"];
   if (!seedUsernames.includes(cleanUsername)) {
     throw new Error("Username tidak terdaftar di sistem.");
   }
@@ -169,7 +171,19 @@ export async function loginUser(username: string, password: string, mfaCode: str
   let unitCode = "UK-SEC-001";
   let unitName = "Bagian Persuratan & Tata Usaha";
 
-  if (cleanUsername.includes("itsec") || cleanUsername.includes("dir")) {
+  if (cleanUsername === "dir.fin") {
+    role = "HEAD_OF_UNIT";
+    fullName = "Dra. Ratna Juwita, M.Ak.";
+    clearance = "CONFIDENTIAL";
+    unitCode = "UK-FIN-001";
+    unitName = "Direktorat Keuangan & Perencanaan";
+  } else if (cleanUsername === "dir.legal") {
+    role = "HEAD_OF_UNIT";
+    fullName = "Bambang Kurniawan, S.H., M.H.";
+    clearance = "SECRET";
+    unitCode = "UK-LEGAL-001";
+    unitName = "Direktorat Hukum & Regulasi";
+  } else if (cleanUsername.includes("itsec") || cleanUsername === "dir.itsec") {
     role = "HEAD_OF_UNIT";
     fullName = "Ir. Hendra Wijaya, M.T.";
     clearance = "SECRET";
@@ -511,7 +525,7 @@ export async function changeUserPassword(username: string, oldPass: string, newP
     localStorage.setItem("local_registered_users", JSON.stringify(localUsers));
   } else {
     // Check seed accounts
-    const seedUsernames = ["ka.unit.sec", "sekretaris.sec", "staf.sec", "admin.sys", "auditor.sys"];
+    const seedUsernames = ["ka.unit.sec", "sekretaris.sec", "staf.sec", "admin.sys", "auditor.sys", "dir.itsec", "dir.fin", "dir.legal"];
     if (!seedUsernames.includes(cleanUsername)) {
       throw new Error("Username tidak terdaftar di sistem.");
     }
