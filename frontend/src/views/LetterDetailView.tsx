@@ -72,7 +72,7 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
         signatureAlgorithm: "Ed25519 (Asymmetric EdDSA)",
         timestampToken: "TSA_TIMESTAMP_TOKEN|8f4e3c2b...|2026-07-20T14:30:12Z",
         fileName: cleanFileName,
-        fileDataUrl: found.fileDataUrl || '',
+        fileDataUrl: found.fileDataUrl || found.symmetric_envelope_key || '',
         fileSize: found.fileSize || 422000,
         contentHash: "8f4e3c2b1a9f0d8e7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d"
       };

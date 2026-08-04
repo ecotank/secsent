@@ -202,7 +202,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
       sender: user.full_name,
       recipient,
       fileName: origFileName,
-      encryptedPayload: encContent
+      encryptedPayload: fileDataUrl || encContent
     };
 
     // Async sync to Neon PostgreSQL Cloud Database Serverless API
