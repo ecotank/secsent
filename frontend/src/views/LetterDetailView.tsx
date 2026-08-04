@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { UserProfile } from '../services/api';
+import React, { useState, useEffect } from 'react';
+import { UserProfile, getLettersFromNeonDB } from '../services/api';
 import { validateSecurityPIN, logUnitActivity } from '../utils/webcrypto';
 import { ArrowLeft, ShieldCheck, Lock, Send, UserCheck, ShieldAlert, Key, EyeOff, FileText, Download } from 'lucide-react';
 
@@ -20,26 +20,53 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
   const [isSecretUnlocked, setIsSecretUnlocked] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
+  const [activeLetter, setActiveLetter] = useState<any>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadLetterDetail() {
+      // 1. Fetch live letter detail from Neon DB via Netlify Serverless API
+      try {
+        const neonLetters = await getLettersFromNeonDB();
+        if (neonLetters && Array.isArray(neonLetters)) {
+          const match = neonLetters.find((l: any) => l.id === letterId || l.number === letterId || l.fileName === letterId);
+          if (isMounted && match) {
+            setActiveLetter(match);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Neon DB detail fetch notice:", err);
+      }
+
+      // 2. Check local letters
+      const localLettersJson = localStorage.getItem("local_letters");
+      const localLetters = localLettersJson ? JSON.parse(localLettersJson) : [];
+      const found = localLetters.find((l: any) => l.id === letterId || l.letterId === letterId || l.number === letterId);
+      if (isMounted && found) {
+        setActiveLetter(found);
+      }
+    }
+    loadLetterDetail();
+    return () => { isMounted = false; };
+  }, [letterId]);
 
   const mockDetail = React.useMemo(() => {
-    const localLettersJson = localStorage.getItem("local_letters");
-    const localLetters = localLettersJson ? JSON.parse(localLettersJson) : [];
-    const found = localLetters.find((l: any) => l.id === letterId || l.letterId === letterId || l.number === letterId);
-
+    const found = activeLetter;
     if (found) {
-      const rawFileName = found.fileName || `Naskah_Dinas_${found.number.replace(/\//g, '_')}.pdf`;
+      const rawFileName = found.fileName || `Naskah_Dinas_${(found.number || '001').replace(/\//g, '_')}.pdf`;
       const cleanFileName = rawFileName.toLowerCase().endsWith('.pdf') ? rawFileName : `${rawFileName}.pdf`;
 
       return {
         id: found.id || found.letterId || letterId,
-        number: found.number,
-        subject: found.subject,
+        number: found.number || found.letter_number || "ND/001/UK-SEC-001/VII/2026",
+        subject: found.subject || "Naskah Dinas Terenkripsi",
         category: found.category || "NOTA_DINAS",
         classification: found.classification || "BIASA",
         senderUnit: found.sender || "Bagian Persuratan & Tata Usaha (UK-SEC-001)",
         recipientUnit: found.recipient || "Direktorat Keamanan Informasi (UK-ITSEC-001)",
         ccUnit: "Kantor Pusat / Sekretariat Utama (UK-ROOT)",
-        content: found.content || `Perihal Naskah Dinas: ${found.subject}.\n\nDengan hormat,\nBersama ini kami sampaikan naskah dinas resmi nomor ${found.number} untuk dapat ditindaklanjuti sesuai petunjuk pimpinan.\n\nDemikian naskah dinas ini dibuat dengan keamanan penuh terenkripsi (AES-256-GCM).`,
+        content: found.content || `Perihal Naskah Dinas: ${found.subject || 'Terlampir Dokumen Resmi'}.\n\nDengan hormat,\nBersama ini kami sampaikan naskah dinas resmi nomor ${found.number || ''} untuk dapat ditindaklanjuti sesuai petunjuk pimpinan.\n\nDemikian naskah dinas ini dibuat dengan keamanan penuh terenkripsi (AES-256-GCM + X25519).`,
         signerName: found.sender || "Dr. Budi Santoso, M.Si. (Kepala Unit Kerja)",
         signedAt: found.date || "2026-07-20 14:30:12 UTC",
         signatureAlgorithm: "Ed25519 (Asymmetric EdDSA)",
@@ -70,7 +97,7 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
       fileSize: 422000,
       contentHash: "8f4e3c2b1a9f0d8e7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e0d9c8b7a6f5e4d"
     };
-  }, [letterId]);
+  }, [letterId, activeLetter]);
 
   const handlePINVerification = async (e: React.FormEvent) => {
     e.preventDefault();
