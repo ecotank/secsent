@@ -3,15 +3,51 @@
 -- File: database/seeds/000002_seed_data.sql
 -- ==========================================
 
--- 1. Insert Work Units
+-- 1. Insert Baintelkam Polri Work Units
 INSERT INTO work_units (id, unit_code, unit_name, security_clearance_level) VALUES
+('b1111111-1111-1111-1111-111111111111', 'UK-PIMPINAN', 'Pimpinan Baintelkam Polri', 'SECRET'),
+('b2222222-2222-2222-2222-222222222222', 'UK-RORENMIN', 'Biro Perencanaan & Administrasi', 'CONFIDENTIAL'),
+('b3333333-3333-3333-3333-333333333333', 'UK-ROANALIS', 'Biro Analisis Baintelkam', 'SECRET'),
+('b4444444-4444-4444-4444-444444444444', 'UK-DITPOLITIK', 'Direktorat Politik Baintelkam', 'SECRET'),
+('b5555555-5555-5555-5555-555555555555', 'UK-DITEKONOMI', 'Direktorat Ekonomi Baintelkam', 'SECRET'),
+('b6666666-6666-6666-6666-666666666666', 'UK-DITSOSBUD', 'Direktorat Sosial Budaya Baintelkam', 'SECRET'),
+('b7777777-7777-7777-7777-777777777777', 'UK-DITKAMNEG', 'Direktorat Keamanan Negara Baintelkam', 'SECRET'),
+('b8888888-8888-8888-8888-888888888888', 'UK-DITKAMSUS', 'Direktorat Keamanan Khusus Baintelkam', 'SECRET'),
+('b9999999-9999-9999-9999-999999999999', 'UK-INTELTEK', 'Bidang Intelijen Teknis Baintelkam', 'SECRET'),
+('baaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'UK-YANMAS', 'Bidang Pelayanan Masyarakat Baintelkam', 'RESTRICTED'),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'UK-BIDSANDI', 'Bidang Sandi & Kriptografi Baintelkam', 'SECRET'),
+
+-- Legacy Demo Units (To prevent backward compatibility breaking)
 ('11111111-1111-1111-1111-111111111111', 'UK-SEC-001', 'Bagian Persuratan & Tata Usaha', 'CONFIDENTIAL'),
 ('22222222-2222-2222-2222-222222222222', 'UK-ITSEC-001', 'Direktorat Keamanan Informasi & Cyber', 'SECRET'),
 ('33333333-3333-3333-3333-333333333333', 'UK-ROOT', 'Kantor Pusat / Sekretariat Utama', 'UNCLASSIFIED')
 ON CONFLICT (unit_code) DO NOTHING;
 
--- 2. Insert Users
+-- 2. Insert Baintelkam Polri Users
 INSERT INTO users (id, work_unit_id, username, email, password_hash, full_name, nip_nik, role, clearance_level) VALUES
+-- Pimpinan
+('ba111111-1111-1111-1111-111111111111', 'b1111111-1111-1111-1111-111111111111', 'kabaintelkam', 'kabaintelkam@baintelkam.polri.go.id', '$2a$10$abcdefghijklmnopqrstuvwxyz123456', 'Komjen Pol. Dr. H. Mohammad Adil, S.H.', 'NIP-19700512-001', 'HEAD_OF_UNIT', 'SECRET'),
+('ba222222-2222-2222-2222-222222222222', 'b1111111-1111-1111-1111-111111111111', 'wakabaintelkam', 'wakabaintelkam@baintelkam.polri.go.id', '$2a$10$abcdefghijklmnopqrstuvwxyz123456', 'Irjen Pol. Drs. Sunardi, M.Si.', 'NIP-19720822-002', 'AUDITOR', 'SECRET'),
+
+-- Pembantu Pimpinan & Staf Administratif
+('ba333333-3333-3333-3333-333333333333', 'b2222222-2222-2222-2222-222222222222', 'karorenmin', 'karorenmin@baintelkam.polri.go.id', '$2a$10$abcdefghijklmnopqrstuvwxyz123456', 'Brigjen Pol. Drs. Ahmad Syarif, M.B.A.', 'NIP-19750915-003', 'HEAD_OF_UNIT', 'CONFIDENTIAL'),
+('ba444444-4444-4444-4444-444444444444', 'b3333333-3333-3333-3333-333333333333', 'karoanalis', 'karoanalis@baintelkam.polri.go.id', '$2a$10$abcdefghijklmnopqrstuvwxyz123456', 'Brigjen Pol. Ir. H. Mulyadi, M.Si.', 'NIP-19741002-004', 'HEAD_OF_UNIT', 'SECRET'),
+
+-- Unsur Pelaksana Tugas Pokok (Direktur Operasional)
+('ba555555-5555-5555-5555-555555555555', 'b4444444-4444-4444-4444-444444444444', 'dir.politik', 'dir.politik@baintelkam.polri.go.id', '$2a$10$abcdefghijklmnopqrstuvwxyz123456', 'Brigjen Pol. Hendra Gunawan, S.H.', 'NIP-19760315-005', 'HEAD_OF_UNIT', 'SECRET'),
+('ba666666-6666-6666-6666-666666666666', 'b5555555-5555-5555-5555-555555555555', 'dir.ekonomi', 'dir.ekonomi@baintelkam.polri.go.id', '$2a$10$abcdefghijklmnopqrstuvwxyz123456', 'Brigjen Pol. Dr. Edi Wahyono, S.E., M.Si.', 'NIP-19751121-006', 'HEAD_OF_UNIT', 'SECRET'),
+('ba777777-7777-7777-7777-777777777777', 'b6666666-6666-6666-6666-666666666666', 'dir.sosbud', 'dir.sosbud@baintelkam.polri.go.id', '$2a$10$abcdefghijklmnopqrstuvwxyz123456', 'Brigjen Pol. Drs. FX. Bagus, M.H.', 'NIP-19760723-007', 'HEAD_OF_UNIT', 'SECRET'),
+('ba888888-8888-8888-8888-888888888888', 'b7777777-7777-7777-7777-777777777777', 'dir.kamneg', 'dir.kamneg@baintelkam.polri.go.id', '$2a$10$abcdefghijklmnopqrstuvwxyz123456', 'Brigjen Pol. Drs. Yudi Hermawan, M.Si.', 'NIP-19750518-008', 'HEAD_OF_UNIT', 'SECRET'),
+('ba999999-9999-9999-9999-999999999999', 'b8888888-8888-8888-8888-888888888888', 'dir.kamsus', 'dir.kamsus@baintelkam.polri.go.id', '$2a$10$abcdefghijklmnopqrstuvwxyz123456', 'Brigjen Pol. Ir. Rian Hidayat, M.Sc.', 'NIP-19770214-009', 'HEAD_OF_UNIT', 'SECRET'),
+
+-- Urusan Tata Usaha & Agen Pelaksana
+('baaaaaaa-aaaa-aaaa-aaaa-bbbbbbbbbbbb', 'b8888888-8888-8888-8888-888888888888', 'urtu.kamsus', 'urtu.kamsus@baintelkam.polri.go.id', '$2a$10$abcdefghijklmnopqrstuvwxyz123456', 'Aipda Joko Susilo', 'NIP-19850315-010', 'SECRETARY', 'CONFIDENTIAL'),
+('baaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', 'b8888888-8888-8888-8888-888888888888', 'cyber.intel', 'cyber.intel@baintelkam.polri.go.id', '$2a$10$abcdefghijklmnopqrstuvwxyz123456', 'Brigadir Rian Firmansyah', 'NIP-19920412-011', 'STAFF', 'SECRET'),
+
+-- Unsur Pendukung Operasional (Admin Sandi)
+('bacccccc-cccc-cccc-cccc-cccccccccccc', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'admin.sandi', 'admin.sandi@baintelkam.polri.go.id', '$2a$10$abcdefghijklmnopqrstuvwxyz123456', 'Kombes Pol. Dr. Crypto Widjojo, M.T.', 'NIP-19730510-012', 'ADMIN', 'SECRET'),
+
+-- Legacy Demo Accounts
 ('a1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', 'ka.unit.sec', 'ka.unit.sec@secsent.internal', '$2a$10$abcdefghijklmnopqrstuvwxyz123456', 'Dr. Budi Santoso, M.Si.', 'NIP-19800101-001', 'HEAD_OF_UNIT', 'CONFIDENTIAL'),
 ('a2222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'sekretaris.sec', 'sekretaris.sec@secsent.internal', '$2a$10$abcdefghijklmnopqrstuvwxyz123456', 'Siti Rahma, S.AP.', 'NIP-19850202-002', 'SECRETARY', 'RESTRICTED'),
 ('a3333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111', 'staf.sec', 'staf.sec@secsent.internal', '$2a$10$abcdefghijklmnopqrstuvwxyz123456', 'Ahmad Hidayat, S.Kom.', 'NIP-19900303-003', 'STAFF', 'UNCLASSIFIED'),
@@ -20,7 +56,7 @@ INSERT INTO users (id, work_unit_id, username, email, password_hash, full_name, 
 ('a6666666-6666-6666-6666-666666666666', '33333333-3333-3333-3333-333333333333', 'auditor.sys', 'auditor.sys@secsent.internal', '$2a$10$abcdefghijklmnopqrstuvwxyz123456', 'Auditor Keamanan Utama', 'NIP-19800606-006', 'AUDITOR', 'SECRET')
 ON CONFLICT (username) DO NOTHING;
 
--- 3. Insert Letters (Encrypted Envelope Metadata)
+-- 3. Insert Initial Letters
 INSERT INTO letters (
   id, letter_number, subject_encrypted, classification, category, sender_unit_id,
   encrypted_content_path, symmetric_envelope_key, content_hash, status
@@ -54,7 +90,7 @@ ON CONFLICT (letter_number) DO NOTHING;
 -- 4. Insert Initial Hash-Chained Audit Logs
 INSERT INTO audit_logs (actor_user_id, action, ip_address, user_agent, previous_hash, current_hash) VALUES
 (
-  'a1111111-1111-1111-1111-111111111111',
+  'ba111111-1111-1111-1111-111111111111',
   'INITIALIZE_SYSTEM_DATABASE_SCHEMA',
   '127.0.0.1',
   'SecSent Migration Engine v1.0.0',

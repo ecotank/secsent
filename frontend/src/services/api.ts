@@ -104,6 +104,7 @@ export async function loginUser(username: string, password: string, mfaCode: str
 
   // --- LOCAL DYNAMIC USER AUTHENTICATOR (STAGING FALLBACK) ---
   const defaultPasswords: Record<string, string> = {
+    // Legacy Demo Accounts
     "ka.unit.sec": "pimpinan123",
     "sekretaris.sec": "sekretaris123",
     "staf.sec": "staf123",
@@ -111,7 +112,21 @@ export async function loginUser(username: string, password: string, mfaCode: str
     "auditor.sys": "auditor123",
     "dir.itsec": "direktur123",
     "dir.fin": "keuangan123",
-    "dir.legal": "hukum123"
+    "dir.legal": "hukum123",
+
+    // Baintelkam Polri Accounts
+    "kabaintelkam": "intel123",
+    "wakabaintelkam": "intel123",
+    "karorenmin": "renmin123",
+    "karoanalis": "analis123",
+    "dir.politik": "politik123",
+    "dir.ekonomi": "ekonomi123",
+    "dir.sosbud": "sosbud123",
+    "dir.kamneg": "kamneg123",
+    "dir.kamsus": "kamsus123",
+    "urtu.kamsus": "urtu123",
+    "cyber.intel": "cyber123",
+    "admin.sandi": "sandi123"
   };
 
   const cleanUsername = username.trim().toLowerCase();
@@ -149,7 +164,10 @@ export async function loginUser(username: string, password: string, mfaCode: str
   }
 
   // Validate seed accounts
-  const seedUsernames = ["ka.unit.sec", "sekretaris.sec", "staf.sec", "admin.sys", "auditor.sys", "dir.itsec", "dir.fin", "dir.legal"];
+  const seedUsernames = [
+    "ka.unit.sec", "sekretaris.sec", "staf.sec", "admin.sys", "auditor.sys", "dir.itsec", "dir.fin", "dir.legal",
+    "kabaintelkam", "wakabaintelkam", "karorenmin", "karoanalis", "dir.politik", "dir.ekonomi", "dir.sosbud", "dir.kamneg", "dir.kamsus", "urtu.kamsus", "cyber.intel", "admin.sandi"
+  ];
   if (!seedUsernames.includes(cleanUsername)) {
     throw new Error("Username tidak terdaftar di sistem.");
   }
@@ -171,7 +189,79 @@ export async function loginUser(username: string, password: string, mfaCode: str
   let unitCode = "UK-SEC-001";
   let unitName = "Bagian Persuratan & Tata Usaha";
 
-  if (cleanUsername === "dir.fin") {
+  if (cleanUsername === "kabaintelkam") {
+    role = "HEAD_OF_UNIT";
+    fullName = "Komjen Pol. Dr. H. Mohammad Adil, S.H.";
+    clearance = "SECRET";
+    unitCode = "UK-PIMPINAN";
+    unitName = "Pimpinan Baintelkam Polri";
+  } else if (cleanUsername === "wakabaintelkam") {
+    role = "AUDITOR";
+    fullName = "Irjen Pol. Drs. Sunardi, M.Si.";
+    clearance = "SECRET";
+    unitCode = "UK-PIMPINAN";
+    unitName = "Pimpinan Baintelkam Polri";
+  } else if (cleanUsername === "karorenmin") {
+    role = "HEAD_OF_UNIT";
+    fullName = "Brigjen Pol. Drs. Ahmad Syarif, M.B.A.";
+    clearance = "CONFIDENTIAL";
+    unitCode = "UK-RORENMIN";
+    unitName = "Biro Perencanaan & Administrasi";
+  } else if (cleanUsername === "karoanalis") {
+    role = "HEAD_OF_UNIT";
+    fullName = "Brigjen Pol. Ir. H. Mulyadi, M.Si.";
+    clearance = "SECRET";
+    unitCode = "UK-ROANALIS";
+    unitName = "Biro Analisis Baintelkam";
+  } else if (cleanUsername === "dir.politik") {
+    role = "HEAD_OF_UNIT";
+    fullName = "Brigjen Pol. Hendra Gunawan, S.H.";
+    clearance = "SECRET";
+    unitCode = "UK-DITPOLITIK";
+    unitName = "Direktorat Politik Baintelkam";
+  } else if (cleanUsername === "dir.ekonomi") {
+    role = "HEAD_OF_UNIT";
+    fullName = "Brigjen Pol. Dr. Edi Wahyono, S.E., M.Si.";
+    clearance = "SECRET";
+    unitCode = "UK-DITEKONOMI";
+    unitName = "Direktorat Ekonomi Baintelkam";
+  } else if (cleanUsername === "dir.sosbud") {
+    role = "HEAD_OF_UNIT";
+    fullName = "Brigjen Pol. Drs. FX. Bagus, M.H.";
+    clearance = "SECRET";
+    unitCode = "UK-DITSOSBUD";
+    unitName = "Direktorat Sosial Budaya Baintelkam";
+  } else if (cleanUsername === "dir.kamneg") {
+    role = "HEAD_OF_UNIT";
+    fullName = "Brigjen Pol. Drs. Yudi Hermawan, M.Si.";
+    clearance = "SECRET";
+    unitCode = "UK-DITKAMNEG";
+    unitName = "Direktorat Keamanan Negara Baintelkam";
+  } else if (cleanUsername === "dir.kamsus") {
+    role = "HEAD_OF_UNIT";
+    fullName = "Brigjen Pol. Ir. Rian Hidayat, M.Sc.";
+    clearance = "SECRET";
+    unitCode = "UK-DITKAMSUS";
+    unitName = "Direktorat Keamanan Khusus Baintelkam";
+  } else if (cleanUsername === "urtu.kamsus") {
+    role = "SECRETARY";
+    fullName = "Aipda Joko Susilo";
+    clearance = "CONFIDENTIAL";
+    unitCode = "UK-DITKAMSUS";
+    unitName = "Direktorat Keamanan Khusus Baintelkam";
+  } else if (cleanUsername === "cyber.intel") {
+    role = "STAFF";
+    fullName = "Brigadir Rian Firmansyah";
+    clearance = "SECRET";
+    unitCode = "UK-DITKAMSUS";
+    unitName = "Direktorat Keamanan Khusus Baintelkam";
+  } else if (cleanUsername === "admin.sandi") {
+    role = "ADMIN";
+    fullName = "Kombes Pol. Dr. Crypto Widjojo, M.T.";
+    clearance = "SECRET";
+    unitCode = "UK-BIDSANDI";
+    unitName = "Bidang Sandi & Kriptografi Baintelkam";
+  } else if (cleanUsername === "dir.fin") {
     role = "HEAD_OF_UNIT";
     fullName = "Dra. Ratna Juwita, M.Ak.";
     clearance = "CONFIDENTIAL";
@@ -221,7 +311,7 @@ export async function loginUser(username: string, password: string, mfaCode: str
         unit_code: unitCode,
         unit_name: unitName
       },
-      password_change_required: cleanUsername !== "ka.unit.sec" && cleanUsername !== "admin.sys" && cleanUsername !== "dir.itsec"
+      password_change_required: cleanUsername !== "ka.unit.sec" && cleanUsername !== "admin.sys" && cleanUsername !== "dir.itsec" && cleanUsername !== "kabaintelkam" && cleanUsername !== "admin.sandi"
     }
   };
 }
@@ -504,6 +594,7 @@ export async function changeUserPassword(username: string, oldPass: string, newP
 
   // 2. Local Fallback authentication change
   const defaultPasswords: Record<string, string> = {
+    // Legacy Demo Accounts
     "ka.unit.sec": "pimpinan123",
     "sekretaris.sec": "sekretaris123",
     "staf.sec": "staf123",
@@ -511,7 +602,21 @@ export async function changeUserPassword(username: string, oldPass: string, newP
     "auditor.sys": "auditor123",
     "dir.itsec": "direktur123",
     "dir.fin": "keuangan123",
-    "dir.legal": "hukum123"
+    "dir.legal": "hukum123",
+
+    // Baintelkam Polri Accounts
+    "kabaintelkam": "intel123",
+    "wakabaintelkam": "intel123",
+    "karorenmin": "renmin123",
+    "karoanalis": "analis123",
+    "dir.politik": "politik123",
+    "dir.ekonomi": "ekonomi123",
+    "dir.sosbud": "sosbud123",
+    "dir.kamneg": "kamneg123",
+    "dir.kamsus": "kamsus123",
+    "urtu.kamsus": "urtu123",
+    "cyber.intel": "cyber123",
+    "admin.sandi": "sandi123"
   };
 
   const localUsersJson = localStorage.getItem("local_registered_users");
@@ -528,7 +633,10 @@ export async function changeUserPassword(username: string, oldPass: string, newP
     localStorage.setItem("local_registered_users", JSON.stringify(localUsers));
   } else {
     // Check seed accounts
-    const seedUsernames = ["ka.unit.sec", "sekretaris.sec", "staf.sec", "admin.sys", "auditor.sys", "dir.itsec", "dir.fin", "dir.legal"];
+    const seedUsernames = [
+      "ka.unit.sec", "sekretaris.sec", "staf.sec", "admin.sys", "auditor.sys", "dir.itsec", "dir.fin", "dir.legal",
+      "kabaintelkam", "wakabaintelkam", "karorenmin", "karoanalis", "dir.politik", "dir.ekonomi", "dir.sosbud", "dir.kamneg", "dir.kamsus", "urtu.kamsus", "cyber.intel", "admin.sandi"
+    ];
     if (!seedUsernames.includes(cleanUsername)) {
       throw new Error("Username tidak terdaftar di sistem.");
     }
