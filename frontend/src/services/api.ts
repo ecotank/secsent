@@ -508,7 +508,10 @@ export async function changeUserPassword(username: string, oldPass: string, newP
     "sekretaris.sec": "sekretaris123",
     "staf.sec": "staf123",
     "admin.sys": "admin123",
-    "auditor.sys": "auditor123"
+    "auditor.sys": "auditor123",
+    "dir.itsec": "direktur123",
+    "dir.fin": "keuangan123",
+    "dir.legal": "hukum123"
   };
 
   const localUsersJson = localStorage.getItem("local_registered_users");

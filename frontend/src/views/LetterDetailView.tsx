@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, getLettersFromNeonDB } from '../services/api';
 import { validateSecurityPIN, logUnitActivity } from '../utils/webcrypto';
-import { ArrowLeft, ShieldCheck, Lock, Send, UserCheck, ShieldAlert, Key, EyeOff, FileText, Download } from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Lock, Send, UserCheck, ShieldAlert, Key, EyeOff, FileText, Download, RefreshCw } from 'lucide-react';
 
 interface LetterDetailViewProps {
   user: UserProfile;
@@ -23,6 +23,9 @@ export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letter
   const [activeLetter, setActiveLetter] = useState<any>(null);
 
   useEffect(() => {
+    setActiveLetter(null); // Reset immediately to prevent stale cached letter display!
+    setIsSecretUnlocked(false); // Relock the new letter!
+    
     let isMounted = true;
     async function loadLetterDetail() {
       // 1. Fetch live letter detail from Neon DB via Netlify Serverless API
@@ -234,6 +237,15 @@ startxref
   };
 
   const timestampStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+  if (!activeLetter) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '400px', gap: '1rem' }}>
+        <RefreshCw className="spin-animation" size={32} color="var(--accent-cyan)" />
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Memuat & Mendekripsi Handshake Naskah Dinas...</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative' }}>
