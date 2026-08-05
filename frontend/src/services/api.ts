@@ -126,7 +126,12 @@ export async function loginUser(username: string, password: string, mfaCode: str
     "dir.kamsus": "kamsus123",
     "urtu.kamsus": "urtu123",
     "cyber.intel": "cyber123",
-    "admin.sandi": "sandi123"
+    "admin.sandi": "sandi123",
+    "staf.politik": "staf123",
+    "staf.ekonomi": "staf123",
+    "staf.sosbud": "staf123",
+    "staf.kamneg": "staf123",
+    "staf.kamsus": "staf123"
   };
 
   const cleanUsername = username.trim().toLowerCase();
@@ -166,7 +171,8 @@ export async function loginUser(username: string, password: string, mfaCode: str
   // Validate seed accounts
   const seedUsernames = [
     "ka.unit.sec", "sekretaris.sec", "staf.sec", "admin.sys", "auditor.sys", "dir.itsec", "dir.fin", "dir.legal",
-    "kabaintelkam", "wakabaintelkam", "karorenmin", "karoanalis", "dir.politik", "dir.ekonomi", "dir.sosbud", "dir.kamneg", "dir.kamsus", "urtu.kamsus", "cyber.intel", "admin.sandi"
+    "kabaintelkam", "wakabaintelkam", "karorenmin", "karoanalis", "dir.politik", "dir.ekonomi", "dir.sosbud", "dir.kamneg", "dir.kamsus", "urtu.kamsus", "cyber.intel", "admin.sandi",
+    "staf.politik", "staf.ekonomi", "staf.sosbud", "staf.kamneg", "staf.kamsus"
   ];
   if (!seedUsernames.includes(cleanUsername)) {
     throw new Error("Username tidak terdaftar di sistem.");
@@ -249,12 +255,36 @@ export async function loginUser(username: string, password: string, mfaCode: str
     clearance = "CONFIDENTIAL";
     unitCode = "UK-DITKAMSUS";
     unitName = "Direktorat Keamanan Khusus Baintelkam";
-  } else if (cleanUsername === "cyber.intel") {
+  } else if (cleanUsername === "cyber.intel" || cleanUsername === "staf.kamsus") {
     role = "STAFF";
-    fullName = "Brigadir Rian Firmansyah";
+    fullName = cleanUsername === "cyber.intel" ? "Brigadir Rian Firmansyah" : "Briptu Dian Permana";
     clearance = "SECRET";
     unitCode = "UK-DITKAMSUS";
     unitName = "Direktorat Keamanan Khusus Baintelkam";
+  } else if (cleanUsername === "staf.politik") {
+    role = "STAFF";
+    fullName = "Brigadir Eko Prasetyo";
+    clearance = "SECRET";
+    unitCode = "UK-DITPOLITIK";
+    unitName = "Direktorat Politik Baintelkam";
+  } else if (cleanUsername === "staf.ekonomi") {
+    role = "STAFF";
+    fullName = "Aipda Triyono";
+    clearance = "SECRET";
+    unitCode = "UK-DITEKONOMI";
+    unitName = "Direktorat Ekonomi Baintelkam";
+  } else if (cleanUsername === "staf.sosbud") {
+    role = "STAFF";
+    fullName = "Bripka Agus Wijaya";
+    clearance = "SECRET";
+    unitCode = "UK-DITSOSBUD";
+    unitName = "Direktorat Sosial Budaya Baintelkam";
+  } else if (cleanUsername === "staf.kamneg") {
+    role = "STAFF";
+    fullName = "Bripka Deddy Utama";
+    clearance = "SECRET";
+    unitCode = "UK-DITKAMNEG";
+    unitName = "Direktorat Keamanan Negara Baintelkam";
   } else if (cleanUsername === "admin.sandi") {
     role = "ADMIN";
     fullName = "Kombes Pol. Dr. Crypto Widjojo, M.T.";

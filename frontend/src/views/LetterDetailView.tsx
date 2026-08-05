@@ -11,10 +11,52 @@ interface LetterDetailViewProps {
 
 export const LetterDetailView: React.FC<LetterDetailViewProps> = ({ user, letterId, onBack }) => {
   const [showDispositionModal, setShowDispositionModal] = useState(false);
-  const [targetUser, setTargetUser] = useState('44444444-4444-4444-4444-444444444444');
   const [instruction, setInstruction] = useState('Tolong kaji spesifikasi teknis perangkat jaringan ini dan siapkan tanggapan sebelum hari Jumat.');
   const [urgency, setUrgency] = useState('SEGERA');
   const [disposed, setDisposed] = useState(false);
+
+  const unitContacts = React.useMemo(() => {
+    const allUsers = [
+      { id: "u-1", name: "Komjen Pol. Dr. H. Mohammad Adil, S.H. (Kabaintelkam)", username: "kabaintelkam", unit: "UK-PIMPINAN", role: "HEAD_OF_UNIT" },
+      { id: "u-2", name: "Irjen Pol. Drs. Sunardi, M.Si. (Wakabaintelkam)", username: "wakabaintelkam", unit: "UK-PIMPINAN", role: "AUDITOR" },
+      { id: "u-3", name: "Brigjen Pol. Drs. Ahmad Syarif, M.B.A. (Karorenmin)", username: "karorenmin", unit: "UK-RORENMIN", role: "HEAD_OF_UNIT" },
+      { id: "u-4", name: "Brigjen Pol. Ir. H. Mulyadi, M.Si. (Karoanalis)", username: "karoanalis", unit: "UK-ROANALIS", role: "HEAD_OF_UNIT" },
+      
+      { id: "u-5", name: "Brigjen Pol. Hendra Gunawan, S.H. (Dirpolitik)", username: "dir.politik", unit: "UK-DITPOLITIK", role: "HEAD_OF_UNIT" },
+      { id: "u-6", name: "Brigadir Eko Prasetyo (Staf Ditpolitik)", username: "staf.politik", unit: "UK-DITPOLITIK", role: "STAFF" },
+      
+      { id: "u-7", name: "Brigjen Pol. Dr. Edi Wahyono, S.E., M.Si. (Direkonomi)", username: "dir.ekonomi", unit: "UK-DITEKONOMI", role: "HEAD_OF_UNIT" },
+      { id: "u-8", name: "Aipda Triyono (Staf Ditekonomi)", username: "staf.ekonomi", unit: "UK-DITEKONOMI", role: "STAFF" },
+      
+      { id: "u-9", name: "Brigjen Pol. Drs. FX. Bagus, M.H. (Ditsosbud)", username: "dir.sosbud", unit: "UK-DITSOSBUD", role: "HEAD_OF_UNIT" },
+      { id: "u-10", name: "Bripka Agus Wijaya (Staf Ditsosbud)", username: "staf.sosbud", unit: "UK-DITSOSBUD", role: "STAFF" },
+      
+      { id: "u-11", name: "Brigjen Pol. Drs. Yudi Hermawan, M.Si. (Dirkamneg)", username: "dir.kamneg", unit: "UK-DITKAMNEG", role: "HEAD_OF_UNIT" },
+      { id: "u-12", name: "Bripka Deddy Utama (Staf Ditkamneg)", username: "staf.kamneg", unit: "UK-DITKAMNEG", role: "STAFF" },
+      
+      { id: "u-13", name: "Brigjen Pol. Ir. Rian Hidayat, M.Sc. (Dirkamsus)", username: "dir.kamsus", unit: "UK-DITKAMSUS", role: "HEAD_OF_UNIT" },
+      { id: "u-14", name: "Aipda Joko Susilo (Urtu Ditkamsus)", username: "urtu.kamsus", unit: "UK-DITKAMSUS", role: "SECRETARY" },
+      { id: "u-15", name: "Brigadir Rian Firmansyah (Staf Cyber Kamsus)", username: "cyber.intel", unit: "UK-DITKAMSUS", role: "STAFF" },
+      { id: "u-16", name: "Briptu Dian Permana (Staf Kamsus)", username: "staf.kamsus", unit: "UK-DITKAMSUS", role: "STAFF" }
+    ];
+
+    const currentUnit = user.work_unit?.unit_code || "";
+    let filtered = allUsers.filter(u => u.unit === currentUnit && u.username !== user.username);
+    if (filtered.length === 0) {
+      filtered = allUsers.filter(u => u.username !== user.username);
+    }
+    return filtered;
+  }, [user]);
+
+  const [targetUser, setTargetUser] = useState(() => {
+    return unitContacts.length > 0 ? unitContacts[0].username : 'kabaintelkam';
+  });
+
+  useEffect(() => {
+    if (unitContacts.length > 0) {
+      setTargetUser(unitContacts[0].username);
+    }
+  }, [unitContacts]);
 
   // Zero-Trust PIN & Dynamic TOTP Re-Authentication State
   const [isSecretUnlocked, setIsSecretUnlocked] = useState(false);
@@ -495,10 +537,10 @@ startxref
           <UserCheck size={24} color="var(--accent-emerald)" />
           <div>
             <div style={{ fontWeight: 700, color: 'var(--accent-emerald)', fontSize: '0.9rem' }}>
-              Surat Berhasil Didisposisikan
+              Surat Berhasil Didisposisikan / Diteruskan
             </div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Instruksi disposisi telah dikirimkan ke Staf Pelaksana (Ahmad Hidayat) dengan urgensi {urgency}.
+              Laporan/Surat telah berhasil diteruskan kepada pejabat ({targetUser}) dengan tingkat urgensi {urgency}.
             </div>
           </div>
         </div>
@@ -521,7 +563,7 @@ startxref
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.75rem' }}>
               <h3 style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Send size={18} color="var(--accent-cyan)" /> Disposisi Surat Dinas
+                <Send size={18} color="var(--accent-cyan)" /> Disposisi / Teruskan Surat
               </h3>
               <button onClick={() => setShowDispositionModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '1.2rem' }}>✕</button>
             </div>
@@ -530,11 +572,12 @@ startxref
               
               <div>
                 <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
-                  Target Staf / Pejabat Penerima Disposisi
+                  Target Penerima Disposisi / Penerusan Surat
                 </label>
                 <select className="input-control" value={targetUser} onChange={(e) => setTargetUser(e.target.value)}>
-                  <option value="44444444-4444-4444-4444-444444444444">Ahmad Hidayat (Staf Pelaksana Persuratan)</option>
-                  <option value="33333333-3333-3333-3333-333333333333">Siti Rahma, S.AP. (Sekretaris Unit)</option>
+                  {unitContacts.map(c => (
+                    <option key={c.id} value={c.username}>{c.name}</option>
+                  ))}
                 </select>
               </div>
 
