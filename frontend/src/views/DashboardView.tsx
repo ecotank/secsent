@@ -287,22 +287,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '2rem' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
-            <span style={{ display: 'inline-block', width: '32px', height: '1px', backgroundColor: '#d8ff43' }}/>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '0.16em', color: '#d8ff43', textTransform: 'uppercase' }}>
+            <span style={{ display: 'inline-block', width: '32px', height: '1px', backgroundColor: 'var(--accent-cyan)' }}/>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '0.16em', color: 'var(--accent-cyan)', textTransform: 'uppercase' }}>
               {timestampStr}
             </span>
           </div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 700, color: '#ffffff' }}>
+          <h1 style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--text-main)' }}>
             Selamat siang, {user.full_name.split(' ')[0]}.
           </h1>
-          <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#94a197' }}>
+          <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
             {user.role === 'ADMIN' ? (
               "Keamanan sistem terpantau stabil. Silakan lakukan administrasi registrasi akun pegawai baru."
             ) : user.role === 'AUDITOR' ? (
               "Seluruh hash rantai jejak audit terverifikasi sah. Silakan pantau audit trail siber."
             ) : (
               <>
-                Integritas seluruh surat dinas dalam pengawasan. Ada <span style={{ color: '#e9a84f', fontWeight: 600 }}>{pendingLetters} naskah</span> yang menunggu tanda tangan.
+                Integritas seluruh surat dinas dalam pengawasan. Ada <span style={{ color: 'var(--accent-amber)', fontWeight: 600 }}>{pendingLetters} naskah</span> yang menunggu tanda tangan.
               </>
             )}
           </p>
@@ -604,14 +604,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
           
           {/* Sub-Tab Switching for HEAD_OF_UNIT */}
           {user.role === 'HEAD_OF_UNIT' && (
-            <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
               <button
                 onClick={() => setKaSubTab('letters')}
                 style={{
-                  background: 'none', border: 'none', color: kaSubTab === 'letters' ? '#d8ff43' : '#889a8d',
+                  background: 'none', border: 'none', color: kaSubTab === 'letters' ? 'var(--accent-cyan)' : 'var(--text-muted)',
                   fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
                   letterSpacing: '0.12em', textTransform: 'uppercase',
-                  borderBottom: kaSubTab === 'letters' ? '2px solid #d8ff43' : 'none', paddingBottom: '0.5rem',
+                  borderBottom: kaSubTab === 'letters' ? '2px solid var(--accent-cyan)' : 'none', paddingBottom: '0.5rem',
                   transition: 'all 0.2s'
                 }}
               >
@@ -620,10 +620,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
               <button
                 onClick={() => setKaSubTab('logs')}
                 style={{
-                  background: 'none', border: 'none', color: kaSubTab === 'logs' ? '#d8ff43' : '#889a8d',
+                  background: 'none', border: 'none', color: kaSubTab === 'logs' ? 'var(--accent-cyan)' : 'var(--text-muted)',
                   fontFamily: 'var(--font-mono)', fontSize: '11px', fontWeight: 600, cursor: 'pointer',
                   letterSpacing: '0.12em', textTransform: 'uppercase',
-                  borderBottom: kaSubTab === 'logs' ? '2px solid #d8ff43' : 'none', paddingBottom: '0.5rem',
+                  borderBottom: kaSubTab === 'logs' ? '2px solid var(--accent-cyan)' : 'none', paddingBottom: '0.5rem',
                   transition: 'all 0.2s'
                 }}
               >
@@ -700,30 +700,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 330px', gap: '2rem' }}>
               {/* Left Column: Recent Correspondence Table */}
-              <section style={{ backgroundColor: '#0b1714', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+              <section style={{ backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-glass)', overflow: 'hidden' }}>
                 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem', borderBottom: '1px solid var(--border-glass)' }}>
                   <div>
-                    <h2 style={{ fontSize: '1rem', fontWeight: 600, color: '#ffffff' }}>Naskah dinas terbaru</h2>
-                    <p style={{ fontSize: '0.75rem', color: '#87958a', marginTop: '0.25rem' }}>Register pergerakan dokumen dinas terakhir</p>
+                    <h2 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-main)' }}>Naskah dinas terbaru</h2>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Register pergerakan dokumen dinas terakhir</p>
                   </div>
                   <label style={{
-                    display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#07100f',
-                    border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', padding: '0.4rem 0.75rem', color: '#829185'
+                    display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--bg-primary)',
+                    border: '1px solid var(--border-glass)', borderRadius: '6px', padding: '0.4rem 0.75rem', color: 'var(--text-muted)'
                   }}>
                     <Icon name="search" size={15}/>
                     <input
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       placeholder="Cari nomor atau perihal"
-                      style={{ width: '140px', background: 'transparent', border: 'none', color: '#ffffff', fontSize: '12px', outline: 'none' }}
+                      style={{ width: '140px', background: 'transparent', border: 'none', color: 'var(--text-main)', fontSize: '12px', outline: 'none' }}
                     />
                   </label>
                 </div>
 
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-                    <thead style={{ backgroundColor: '#091411', fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#758277' }}>
+                    <thead style={{ backgroundColor: 'var(--bg-secondary)', fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>
                       <tr>
                         <th style={{ padding: '0.75rem 1.25rem', fontWeight: 400 }}>Nomor Naskah</th>
                         <th style={{ padding: '0.75rem 0.75rem', fontWeight: 400 }}>Perihal / Unit Kerja</th>
@@ -734,13 +734,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
                     </thead>
                     <tbody>
                       {filtered.map((letter) => (
-                        <tr key={letter.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', transition: 'background 0.2s' }}>
-                          <td style={{ padding: '1rem 1.25rem', fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#d8ff43' }}>
+                        <tr key={letter.id} style={{ borderBottom: '1px solid var(--border-glass)', transition: 'background 0.2s' }}>
+                          <td style={{ padding: '1rem 1.25rem', fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--accent-cyan)' }}>
                             {letter.number}
                           </td>
                           <td style={{ padding: '1rem 0.75rem' }}>
-                            <p style={{ fontSize: '0.875rem', fontWeight: 500, color: '#e4eae4' }}>{letter.subject}</p>
-                            <p style={{ fontSize: '11px', color: '#849287', marginTop: '0.25rem' }}>Dari: {letter.sender}</p>
+                            <p style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-main)' }}>{letter.subject}</p>
+                            <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '0.25rem' }}>Dari: {letter.sender}</p>
                           </td>
                           <td style={{ padding: '1rem 0.75rem' }}>
                             <span className={`badge ${
@@ -774,17 +774,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
               <aside style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 
                 {/* Node Security Panel */}
-                <section style={{ backgroundColor: '#0b1714', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', padding: '1.25rem' }}>
+                <section style={{ backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-glass)', padding: '1.25rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
                     <div>
-                      <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#89978c' }}>
+                      <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-muted)' }}>
                         Keamanan Ekosistem
                       </p>
-                      <h2 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#ffffff', marginTop: '0.25rem' }}>Node Utama Aman</h2>
+                      <h2 style={{ fontSize: '1.1rem', fontWeight: 600, color: 'var(--text-main)', marginTop: '0.25rem' }}>Node Utama Aman</h2>
                     </div>
                     <div style={{
                       display: 'grid', placeItems: 'center', width: '36px', height: '36px',
-                      borderRadius: '50%', border: '1px solid rgba(216,255,67,0.3)', color: '#d8ff43'
+                      borderRadius: '50%', border: '1px solid var(--border-cyan)', color: 'var(--accent-cyan)'
                     }}>
                       <Icon name="check" size={17}/>
                     </div>
@@ -795,20 +795,20 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
                       ["AI Sanitizer (FastAPI)", "TERHUBUNG"],
                       ["Replikasi Cadangan DB", "AKTIF"]
                     ].map(([node, status]) => (
-                      <div key={node} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '0.75rem' }}>
-                        <span style={{ fontSize: '12px', color: '#aab6aa' }}>{node}</span>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#79dcb8' }}>{status}</span>
+                      <div key={node} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-glass)', paddingTop: '0.75rem' }}>
+                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{node}</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--accent-emerald)' }}>{status}</span>
                       </div>
                     ))}
                   </div>
                 </section>
 
                 {/* Jejak Audit Terakhir Panel */}
-                <section style={{ backgroundColor: '#101d18', borderRadius: '8px', border: '1px solid rgba(216,255,67,0.2)', padding: '1.25rem' }}>
-                  <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#d8ff43' }}>
+                <section style={{ backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-glass)', padding: '1.25rem' }}>
+                  <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--accent-cyan)' }}>
                     Jejak Audit Terakhir
                   </p>
-                  <div style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '1rem' }}>
+                  <div style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', borderLeft: '1px solid var(--border-glass)', paddingLeft: '1rem' }}>
                     {[
                       ["14:32", "Digital Signature Ed25519 diverifikasi", "Budi Santoso"],
                       ["14:16", "Naskah dinas RAHASIA didekripsi", "Budi Santoso"],
@@ -817,10 +817,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
                       <div key={time} style={{ position: 'relative' }}>
                         <span style={{
                           position: 'absolute', left: '-21px', top: '4px', width: '8px', height: '8px',
-                          borderRadius: '50%', border: '2px solid #101d18', backgroundColor: '#d8ff43'
+                          borderRadius: '50%', border: '2px solid var(--bg-card)', backgroundColor: 'var(--accent-cyan)'
                         }}/>
-                        <p style={{ fontSize: '12px', lineHeight: '1.4', color: '#d6ddd6' }}>{desc}</p>
-                        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#758277', marginTop: '0.25rem' }}>{time} · {actor}</p>
+                        <p style={{ fontSize: '12px', lineHeight: '1.4', color: 'var(--text-main)' }}>{desc}</p>
+                        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{time} · {actor}</p>
                       </div>
                     ))}
                   </div>
