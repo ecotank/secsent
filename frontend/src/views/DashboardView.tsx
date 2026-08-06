@@ -318,52 +318,52 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
       {/* 2. Grid of 4 KPI Metric Cards */}
       <div style={{
         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-        gap: '1px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)',
-        backgroundColor: 'rgba(255,255,255,0.1)', overflow: 'hidden', marginBottom: '2rem'
+        gap: '1px', borderRadius: '8px', border: '1px solid var(--border-glass)',
+        backgroundColor: 'var(--border-glass)', overflow: 'hidden', marginBottom: '2rem'
       }}>
         
-        <div style={{ backgroundColor: '#0b1714', padding: '1.25rem' }}>
+        <div style={{ backgroundColor: 'var(--bg-card)', padding: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.75rem' }}>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#8b9a8d' }}>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-muted)' }}>
               Total Surat Dinas
             </p>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#d8ff43' }}/>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--accent-cyan)' }}/>
           </div>
-          <p style={{ fontSize: '1.85rem', fontWeight: 600, color: '#ffffff' }}>{totalLetters}</p>
-          <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#849287' }}>+3 terbuat minggu ini</p>
+          <p style={{ fontSize: '1.85rem', fontWeight: 600, color: 'var(--text-main)' }}>{totalLetters}</p>
+          <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>+3 terbuat minggu ini</p>
         </div>
 
-        <div style={{ backgroundColor: '#0b1714', padding: '1.25rem' }}>
+        <div style={{ backgroundColor: 'var(--bg-card)', padding: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.75rem' }}>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#8b9a8d' }}>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-muted)' }}>
               Tanda Tangan Sah
             </p>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#79dcb8' }}/>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--accent-emerald)' }}/>
           </div>
-          <p style={{ fontSize: '1.85rem', fontWeight: 600, color: '#ffffff' }}>{signedLetters}</p>
-          <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#849287' }}>Integritas Ed25519 Terjamin</p>
+          <p style={{ fontSize: '1.85rem', fontWeight: 600, color: 'var(--text-main)' }}>{signedLetters}</p>
+          <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Integritas Ed25519 Terjamin</p>
         </div>
 
-        <div style={{ backgroundColor: '#0b1714', padding: '1.25rem' }}>
+        <div style={{ backgroundColor: 'var(--bg-card)', padding: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.75rem' }}>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#8b9a8d' }}>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-muted)' }}>
               Perlu Tindakan
             </p>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#e9a84f' }}/>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--accent-amber)' }}/>
           </div>
-          <p style={{ fontSize: '1.85rem', fontWeight: 600, color: '#e9a84f' }}>{pendingLetters}</p>
-          <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#849287' }}>Persetujuan Tertunda</p>
+          <p style={{ fontSize: '1.85rem', fontWeight: 600, color: 'var(--accent-amber)' }}>{pendingLetters}</p>
+          <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Persetujuan Tertunda</p>
         </div>
 
-        <div style={{ backgroundColor: '#0b1714', padding: '1.25rem' }}>
+        <div style={{ backgroundColor: 'var(--bg-card)', padding: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.75rem' }}>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: '#8b9a8d' }}>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-muted)' }}>
               Integritas Hash
             </p>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#cbd5e1' }}/>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--accent-blue)' }}/>
           </div>
-          <p style={{ fontSize: '1.85rem', fontWeight: 600, color: '#ffffff' }}>99,99%</p>
-          <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#849287' }}>Audit Chains Node Online</p>
+          <p style={{ fontSize: '1.85rem', fontWeight: 600, color: 'var(--text-main)' }}>99,99%</p>
+          <p style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>Audit Chains Node Online</p>
         </div>
 
       </div>

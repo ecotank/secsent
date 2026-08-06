@@ -136,8 +136,8 @@ h1, h2, h3, h4, h5, h6 {
 /* Sidebar Styling */
 .sidebar-container {
   width: 254px;
-  background-color: #091513;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--bg-secondary);
+  border-right: 1px solid var(--border-glass);
   padding: 1.5rem 1.25rem;
   display: flex;
   flex-direction: column;
@@ -177,12 +177,12 @@ h1, h2, h3, h4, h5, h6 {
 /* Header Bar */
 .top-header {
   height: 77px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-glass);
   padding: 0 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #07100f;
+  background: var(--bg-primary);
 }
 
 /* Badge Pills */
@@ -217,4 +217,54 @@ h1, h2, h3, h4, h5, h6 {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--accent-cyan);
+}
+
+/* ==========================================
+   Light Theme Override Variables
+   ========================================== */
+.light-theme {
+  --bg-primary: #f0f4f3;
+  --bg-secondary: #e2e9e7;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f7fbf9;
+
+  --accent-cyan: #2563eb;      /* Deep Royal Blue Primary */
+  --accent-blue: #0ea5e9;      /* Sky Blue Accent */
+  --accent-emerald: #10b981;   /* Verification Green */
+  --accent-amber: #d97706;     /* Warning Amber */
+  --accent-crimson: #dc2626;   /* Alert Red */
+
+  --text-main: #0f172a;        /* Dark Slate Text */
+  --text-muted: #475569;       /* Slate Muted */
+  --text-dim: #64748b;         /* Slate Light Muted */
+
+  --border-glass: rgba(15, 23, 42, 0.12);
+  --border-cyan: rgba(37, 99, 235, 0.3);
+
+  --shadow-glow: 0 4px 20px rgba(37, 99, 235, 0.12);
+  --shadow-card: 0 10px 30px rgba(15, 23, 42, 0.05);
+}
+
+.light-theme ::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.15);
+}
+
+.light-theme .sidebar-nav-btn {
+  color: #475569;
+}
+
+.light-theme .sidebar-nav-btn:hover {
+  background: rgba(15, 23, 42, 0.05);
+  color: #0f172a;
+}
+
+.light-theme .sidebar-nav-btn.active {
+  background-color: var(--accent-cyan);
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+}
+
+.light-theme ::selection {
+  background: var(--accent-cyan);
+  color: #ffffff;
 }

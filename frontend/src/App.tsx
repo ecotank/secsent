@@ -42,6 +42,19 @@ export function App() {
   const [currentView, setCurrentView] = useState<'dashboard' | 'compose' | 'detail'>('dashboard');
   const [selectedLetterId, setSelectedLetterId] = useState<string>('');
 
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return (localStorage.getItem("secsent_theme") as 'dark' | 'light') || 'dark';
+  });
+
+  useEffect(() => {
+    if (theme === 'light') {
+      document.body.classList.add('light-theme');
+    } else {
+      document.body.classList.remove('light-theme');
+    }
+    localStorage.setItem("secsent_theme", theme);
+  }, [theme]);
+
   // Zero-Trust Inactivity Lock
   const [isLocked, setIsLocked] = useState<boolean>(false);
   const [unlockPIN, setUnlockPIN] = useState<string>('');
@@ -317,7 +330,7 @@ export function App() {
   const initials = user.full_name ? user.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'PJ';
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#07100f', color: '#e8eee8' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: 'var(--bg-primary)', color: 'var(--text-main)' }}>
       
       {/* 1. Left Sidebar (Fixed 254px Tactical Container) */}
       <aside className="sidebar-container">
@@ -367,6 +380,24 @@ export function App() {
           >
             <Key size={18} color="var(--accent-cyan)" />
             <span>Keamanan & 2FA</span>
+          </button>
+
+          <button
+            onClick={() => setTheme(prev => prev === 'dark' ? 'light' : 'dark')}
+            className="sidebar-nav-btn"
+            style={{ color: 'var(--text-main)' }}
+          >
+            {theme === 'dark' ? (
+              <>
+                <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-sun" style={{ color: 'var(--accent-cyan)' }}><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                <span>Mode Terang</span>
+              </>
+            ) : (
+              <>
+                <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-moon" style={{ color: 'var(--accent-cyan)' }}><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                <span>Mode Gelap</span>
+              </>
+            )}
           </button>
 
           <button
