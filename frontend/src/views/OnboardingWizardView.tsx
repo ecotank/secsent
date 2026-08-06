@@ -70,7 +70,7 @@ export const OnboardingWizardView: React.FC<OnboardingWizardViewProps> = ({ user
   return (
     <div style={{
       display: 'grid', placeItems: 'center', minHeight: '100vh',
-      backgroundColor: '#07100f', color: '#e8eee8', padding: '2rem'
+      backgroundColor: 'var(--bg-primary)', color: 'var(--text-main)', padding: '2rem'
     }}>
       <div className="glass-card" style={{ maxWidth: '540px', width: '100%', padding: '2.5rem' }}>
         
@@ -78,7 +78,7 @@ export const OnboardingWizardView: React.FC<OnboardingWizardViewProps> = ({ user
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div style={{
             display: 'inline-grid', placeItems: 'center', width: '56px', height: '56px',
-            borderRadius: '12px', backgroundColor: '#d8ff43', color: '#091513', marginBottom: '1rem'
+            borderRadius: '12px', backgroundColor: 'var(--accent-cyan)', color: 'var(--bg-primary)', marginBottom: '1rem'
           }}>
             <ShieldAlert size={28} />
           </div>
@@ -227,7 +227,7 @@ export const OnboardingWizardView: React.FC<OnboardingWizardViewProps> = ({ user
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <QrCode size={18} style={{ color: 'var(--accent-cyan)' }} />
-                  <code style={{ fontSize: '0.85rem', color: '#d8ff43', letterSpacing: '0.05em' }}>
+                  <code style={{ fontSize: '0.85rem', color: 'var(--accent-cyan)', letterSpacing: '0.05em' }}>
                     <strong>{secret}</strong>
                   </code>
                 </div>

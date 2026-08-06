@@ -339,15 +339,15 @@ export function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '3rem', paddingLeft: '0.25rem' }}>
           <div style={{
             display: 'grid', placeItems: 'center', width: '40px', height: '40px',
-            borderRadius: '6px', backgroundColor: '#d8ff43', color: '#091513'
+            borderRadius: '6px', backgroundColor: 'var(--accent-cyan)', color: 'var(--bg-primary)'
           }}>
             <Icon name="shield" size={21}/>
           </div>
           <div>
-            <p style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.2em', color: '#aab6aa', textTransform: 'uppercase' }}>
+            <p style={{ fontSize: '10px', fontWeight: 600, letterSpacing: '0.2em', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
               SECURE
             </p>
-            <p style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '0.05em', color: '#ffffff' }}>
+            <p style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--text-main)' }}>
               CORRESPONDENCE
             </p>
           </div>
@@ -412,14 +412,14 @@ export function App() {
 
         {/* Bottom Protected Badge */}
         <div style={{
-          marginTop: 'auto', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)',
-          backgroundColor: '#0d1c18', padding: '1rem'
+          marginTop: 'auto', borderRadius: '8px', border: '1px solid var(--border-glass)',
+          backgroundColor: 'var(--bg-primary)', padding: '1rem'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '12px', fontWeight: 600, color: '#d8ff43', marginBottom: '0.5rem' }}>
-            <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#d8ff43', boxShadow: '0 0 12px #d8ff43' }}/>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '12px', fontWeight: 600, color: 'var(--accent-emerald)', marginBottom: '0.5rem' }}>
+            <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--accent-emerald)', boxShadow: '0 0 12px var(--accent-emerald)' }}/>
             Sistem Terlindungi
           </div>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', lineHeight: '1.5', color: '#809084' }}>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', lineHeight: '1.5', color: 'var(--text-muted)' }}>
             AES-256 · HSM online<br/>
             SYNC {syncTime} WIB
           </p>

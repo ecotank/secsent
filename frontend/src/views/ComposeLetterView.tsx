@@ -243,7 +243,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
       {/* Dual-Mode Switcher Tabs */}
       <div style={{
         display: 'flex', gap: '0.5rem', marginBottom: '1.5rem',
-        padding: '0.35rem', backgroundColor: '#091513', borderRadius: '10px',
+        padding: '0.35rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '10px',
         border: '1px solid var(--border-glass)', maxWidth: '340px'
       }}>
         <button
@@ -253,7 +253,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
             flex: 1, padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', cursor: 'pointer',
             fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s',
             backgroundColor: mode === 'text' ? 'var(--accent-cyan)' : 'transparent',
-            color: mode === 'text' ? '#091513' : 'var(--text-muted)'
+            color: mode === 'text' ? 'var(--bg-primary)' : 'var(--text-muted)'
           }}
         >
           Tulis Teks Manual
@@ -265,7 +265,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
             flex: 1, padding: '0.5rem 1rem', borderRadius: '8px', border: 'none', cursor: 'pointer',
             fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2',
             backgroundColor: mode === 'file' ? 'var(--accent-cyan)' : 'transparent',
-            color: mode === 'file' ? '#091513' : 'var(--text-muted)'
+            color: mode === 'file' ? 'var(--bg-primary)' : 'var(--text-muted)'
           }}
         >
           Lampirkan File PDF
