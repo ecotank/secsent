@@ -432,7 +432,7 @@ export function App() {
         
         {/* Top Header Bar */}
         <header className="top-header">
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '0.12em', color: '#839187', textTransform: 'uppercase' }}>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', letterSpacing: '0.12em', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
             DASBOR / {currentView === 'dashboard' ? 'DASHBOARD' : currentView === 'compose' ? 'TULIS_SURAT' : 'SURAT_DETAIL'}
           </p>
 
@@ -532,14 +532,14 @@ export function App() {
               )}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', borderLeft: '1px solid var(--border-glass)', paddingLeft: '1rem' }}>
               <div style={{ textAlign: 'right' }}>
-                <p style={{ fontSize: '12px', fontWeight: 600, color: '#ffffff' }}>{user.full_name}</p>
-                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: '#819084', textTransform: 'uppercase' }}>{user.role}</p>
+                <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-main)' }}>{user.full_name}</p>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{user.role}</p>
               </div>
               <div style={{
                 display: 'grid', placeItems: 'center', width: '36px', height: '36px',
-                borderRadius: '50%', backgroundColor: '#355c57', fontSize: '12px', fontWeight: 700, color: '#ffffff'
+                borderRadius: '50%', backgroundColor: 'var(--accent-cyan)', fontSize: '12px', fontWeight: 700, color: 'var(--bg-primary)'
               }}>
                 {initials}
               </div>

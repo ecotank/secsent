@@ -391,7 +391,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
                   <Upload size={32} style={{ color: 'var(--accent-cyan)', marginBottom: '0.75rem' }} />
                   {attachedFile ? (
                     <div>
-                      <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ffffff', marginBottom: '0.25rem' }}>
+                      <p style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
                         📂 Berkas Terpilih: {attachedFile.name}
                       </p>
                       <span style={{ fontSize: '0.75rem', color: 'var(--accent-emerald)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
@@ -461,7 +461,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
                   padding: '1rem'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
-                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffffff' }}>Audit Kepatuhan Perihal</span>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)' }}>Audit Kepatuhan Perihal</span>
                     <span style={{
                       fontSize: '9px', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '4px',
                       backgroundColor: aiResult.compliance.compliance_status === 'COMPLIANT' ? 'rgba(16, 185, 129, 0.15)' : aiResult.compliance.compliance_status === 'WARNING' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)',
@@ -474,7 +474,7 @@ export const ComposeLetterView: React.FC<ComposeLetterViewProps> = ({ user, onBa
                   {aiResult.compliance.recommendations.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                       {aiResult.compliance.recommendations.map((rec: string, idx: number) => (
-                        <div key={idx} style={{ fontSize: '0.75rem', color: '#cbd5e1', display: 'flex', alignItems: 'start', gap: '0.35rem' }}>
+                        <div key={idx} style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'start', gap: '0.35rem' }}>
                           <span style={{ color: 'var(--accent-amber)' }}>•</span>
                           <span>{rec}</span>
                         </div>

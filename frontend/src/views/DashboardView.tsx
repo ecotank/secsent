@@ -636,16 +636,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
             /* Log Pengawasan Unit View */
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 330px', gap: '2rem' }}>
               <section className="glass-card" style={{ padding: '2rem' }}>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#ffffff', marginBottom: '0.5rem' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.5rem' }}>
                   Log Pengawasan Akses Unit Kerja
                 </h2>
-                <p style={{ fontSize: '0.8rem', color: '#8b9a8d', marginBottom: '2rem' }}>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '2rem' }}>
                   Catatan aktivitas seluruh pegawai yang berada di bawah wewenang unit kerja Anda.
                 </p>
 
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-                    <thead style={{ backgroundColor: '#091411', fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#758277' }}>
+                    <thead style={{ backgroundColor: 'var(--bg-secondary)', fontFamily: 'var(--font-mono)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>
                       <tr>
                         <th style={{ padding: '0.75rem 1.25rem', fontWeight: 400 }}>Waktu</th>
                         <th style={{ padding: '0.75rem 0.75rem', fontWeight: 400 }}>Aktor</th>
@@ -656,27 +656,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
                     </thead>
                     <tbody>
                       {accessLogs.map((log, idx) => (
-                        <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                          <td style={{ padding: '1rem 1.25rem', fontFamily: 'var(--font-mono)', fontSize: '11px', color: '#aab6aa' }}>
+                        <tr key={idx} style={{ borderBottom: '1px solid var(--border-glass)' }}>
+                          <td style={{ padding: '1rem 1.25rem', fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--text-muted)' }}>
                             {log.timestamp}
                           </td>
-                          <td style={{ padding: '1rem 0.75rem', fontSize: '13px', fontWeight: 600, color: '#e8eee8' }}>
+                          <td style={{ padding: '1rem 0.75rem', fontSize: '13px', fontWeight: 600, color: 'var(--text-main)' }}>
                             {log.username}
                           </td>
-                          <td style={{ padding: '1rem 0.75rem', fontSize: '13px', color: '#d6ddd6' }}>
+                          <td style={{ padding: '1rem 0.75rem', fontSize: '13px', color: 'var(--text-muted)' }}>
                             {log.action}
                           </td>
                           <td style={{ padding: '1rem 0.75rem' }}>
                             <span style={{
                               fontFamily: 'var(--font-mono)', fontSize: '9px', fontWeight: 600,
-                              color: log.status === 'SUCCESS' ? '#79dcb8' : '#ff8585',
-                              backgroundColor: log.status === 'SUCCESS' ? 'rgba(121,220,184,0.1)' : 'rgba(255,107,107,0.1)',
+                              color: log.status === 'SUCCESS' ? 'var(--accent-emerald)' : 'var(--accent-crimson)',
+                              backgroundColor: log.status === 'SUCCESS' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
                               padding: '0.15rem 0.4rem', borderRadius: '4px'
                             }}>
                               {log.status}
                             </span>
                           </td>
-                          <td style={{ padding: '1rem 1.25rem', fontSize: '11px', color: '#758277' }}>
+                          <td style={{ padding: '1rem 1.25rem', fontSize: '11px', color: 'var(--text-muted)' }}>
                             {log.client}
                           </td>
                         </tr>
@@ -687,11 +687,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ user, onSelectLett
               </section>
 
               <aside style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                <div style={{ backgroundColor: '#0b1714', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', padding: '1.25rem' }}>
-                  <h3 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#ffffff', marginBottom: '0.5rem' }}>
+                <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: '8px', border: '1px solid var(--border-glass)', padding: '1.25rem' }}>
+                  <h3 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '0.5rem' }}>
                     Fungsi Pengawasan Kepala Unit
                   </h3>
-                  <p style={{ fontSize: '0.75rem', color: '#8b9a8d', lineHeight: '1.5' }}>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
                     Dashboard pemantauan ini menyajikan transparansi aktivitas personil unit kerja secara real-time guna mencegah penyalahgunaan akses dan menjaga akuntabilitas dokumen.
                   </p>
                 </div>

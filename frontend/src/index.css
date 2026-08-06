@@ -268,3 +268,37 @@ h1, h2, h3, h4, h5, h6 {
   background: #0f172a;
   color: #ffffff;
 }
+
+/* Light Theme Button & Input Overrides */
+.light-theme .btn-primary {
+  background: #0f172a;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
+}
+
+.light-theme .btn-primary:hover {
+  background: #1e293b;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.25);
+}
+
+.light-theme .btn-secondary {
+  background: #f1f5f9;
+  color: #0f172a;
+  border: 1px solid #cbd5e1;
+}
+
+.light-theme .btn-secondary:hover {
+  background: #e2e8f0;
+  border-color: #94a3b8;
+}
+
+.light-theme .input-control {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+.light-theme .input-control:focus {
+  border-color: #0f172a;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.1);
+}
