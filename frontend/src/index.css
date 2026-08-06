@@ -220,29 +220,29 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ==========================================
-   Light Theme Override Variables
+   Light Theme Override Variables (Soft Slate Premium Palette)
    ========================================== */
 .light-theme {
-  --bg-primary: #f0f4f3;
-  --bg-secondary: #e2e9e7;
-  --bg-card: #ffffff;
-  --bg-card-hover: #f7fbf9;
+  --bg-primary: #f8fafc;        /* Soft slate/off-white background */
+  --bg-secondary: #f1f5f9;      /* Light gray sidebar/headers */
+  --bg-card: #ffffff;           /* Crisp white cards */
+  --bg-card-hover: #f8fafc;     /* Soft hover */
 
-  --accent-cyan: #2563eb;      /* Deep Royal Blue Primary */
-  --accent-blue: #0ea5e9;      /* Sky Blue Accent */
-  --accent-emerald: #10b981;   /* Verification Green */
-  --accent-amber: #d97706;     /* Warning Amber */
-  --accent-crimson: #dc2626;   /* Alert Red */
+  --accent-cyan: #0f172a;       /* Deep slate/navy for active buttons */
+  --accent-blue: #3b82f6;       /* Royal Blue */
+  --accent-emerald: #10b981;    /* Verification Green */
+  --accent-amber: #d97706;      /* Warning Amber */
+  --accent-crimson: #ef4444;    /* Alert Red */
 
-  --text-main: #0f172a;        /* Dark Slate Text */
-  --text-muted: #475569;       /* Slate Muted */
-  --text-dim: #64748b;         /* Slate Light Muted */
+  --text-main: #0f172a;         /* Deep gray slate text */
+  --text-muted: #475569;        /* Medium slate gray */
+  --text-dim: #94a3b8;          /* Soft light slate gray */
 
-  --border-glass: rgba(15, 23, 42, 0.12);
-  --border-cyan: rgba(37, 99, 235, 0.3);
+  --border-glass: #e2e8f0;      /* Soft border */
+  --border-cyan: #cbd5e1;       /* Medium border */
 
-  --shadow-glow: 0 4px 20px rgba(37, 99, 235, 0.12);
-  --shadow-card: 0 10px 30px rgba(15, 23, 42, 0.05);
+  --shadow-glow: 0 4px 20px rgba(15, 23, 42, 0.05);
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 }
 
 .light-theme ::-webkit-scrollbar-thumb {
@@ -259,12 +259,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .light-theme .sidebar-nav-btn.active {
-  background-color: var(--accent-cyan);
+  background-color: #0f172a;
   color: #ffffff;
-  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.15);
 }
 
 .light-theme ::selection {
-  background: var(--accent-cyan);
+  background: #0f172a;
   color: #ffffff;
 }
